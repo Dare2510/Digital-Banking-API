@@ -1,0 +1,95 @@
+@startuml
+
+class Account{
+    Long id
+    String accountNumber
+    User owner
+    BigDecimal balance
+    Currency currency
+    AccountStatus status
+    Long version
+    LocalDateTime createdAt
+
+}
+
+class User{
+   Long id
+   UserInformation userInformation
+   String passwordHash
+   UserRole role
+   LocalDateTime createdAt
+}
+
+class Transfer{
+    Long id
+    BigDecimal amount
+    Currency currency
+    TransferStatus status
+    LocalDateTime createdAt
+    LocalDateTime updatedAt
+}
+
+class AccountTransaction {
+    Long id
+    TransactionType type
+    BigDecimal amount
+    BigDecimal balanceAfter
+    String reference
+    LocalDateTime createdAt
+}
+
+class UserInformation{
+   String name
+   String surname
+   String email
+   String street
+   String city
+   String zipCode
+   String country
+}
+
+enum Currency{
+    EURO
+    USD
+    JPY
+}
+
+enum AccountStatus{
+    ACTIVE
+    INACTIVE
+    UNDER_REVIEW
+    BLOCKED
+}
+
+enum TransferStatus{
+    CREATED
+    PENDING
+    COMPLETED
+    CANCELLED
+    FAILED
+}
+
+enum TransactionType {
+    DEPOSIT
+    WITHDRAWAL
+    TRANSFER_IN
+    TRANSFER_OUT
+}
+
+enum UserRole{
+    CUSTOMER
+    STAFF
+    ADMIN
+
+}
+
+User "1" --> "1" UserInformation
+User "1" --> "*" Account : owns
+
+Transfer "*" --> "1" Account : fromAccount
+Transfer "*" --> "1" Account : toAccount
+
+Account "1" --> "*" AccountTransaction
+Transfer "0..1" --> "*" AccountTransaction : creates
+
+@enduml

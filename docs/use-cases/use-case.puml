@@ -1,7 +1,7 @@
 @startuml
 left to right direction
 
-actor "User" as user
+actor "Customer" as customer
 actor "Staff" as staff
 actor "Admin" as admin
 
@@ -12,39 +12,45 @@ rectangle "Digital Banking API"{
     usecase "Register" as UC1
     usecase "Login" as UC2
     usecase "Create Account" as UC3
-    usecase "View Own Account" as UC4
-    usecase "Deposit" as UC5
-    usecase "Withdraw" as UC6
-    usecase "Transfer" as UC7
-    usecase "View Own Transaction History" as UC8
+    usecase "View Own Accounts" as UC4
+    usecase "Withdraw" as UC5
+    usecase "Transfer" as UC6
+    usecase "View Own Transaction History" as UC7
 
-    usecase "View Users" as UC9
-    usecase "View Accounts" as UC10
-    usecase "View Transactions" as UC11
-    usecase "Block / Unblock Account" as UC12
+    usecase "View Users" as UC8
+    usecase "View Accounts" as UC9
+    usecase "View Transactions" as UC10
+    usecase "Block / Unblock Account" as UC11
+    usecase "Deposit Money" as UC12
+    usecase "Cancel Pending Transfer" as UC13
+    usecase "Review Failed Transfer" as UC14
 
-    usecase "Manage Staff" as UC13
-    usecase "Manage Roles" as UC14
-    usecase "View Audit Log" as UC15
+
+    usecase "Manage Staff" as UC15
+    usecase "Manage Roles" as UC16
+    usecase "View Audit Log" as UC17
 
 }
 
-user --> UC1
-user --> UC2
-user --> UC3
-user --> UC4
-user --> UC5
-user --> UC6
-user --> UC7
-user --> UC8
+customer --> UC1
+customer --> UC2
+customer --> UC3
+customer --> UC4
+customer --> UC5
+customer --> UC6
+customer --> UC7
 
+staff --> UC2
+staff --> UC8
 staff --> UC9
 staff --> UC10
 staff --> UC11
 staff --> UC12
+staff --> UC13
+staff --> UC14
 
-admin --> UC13
-admin --> UC14
 admin --> UC15
+admin --> UC16
+admin --> UC17
 
 @enduml
