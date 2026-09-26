@@ -1,0 +1,45 @@
+@startuml
+
+actor Customer
+participant TransferController
+participant TransferService
+participant AccountRepository
+participant TransferRepository
+participant AccountTransactionRepository
+
+Customer -> TransferController : POST /transfers
+TransferController -> TransferService : createTransfer(request)
+
+activate TransferService
+
+TransferService -> AccountRepository : findById(fromAccountId)
+AccountRepository --> TransferService : fromAccount
+
+TransferService -> AccountRepository : findById(toAccountId)
+AccountRepository --> TransferService : toAccount
+
+TransferService -> TransferService : validate ownership
+TransferService -> TransferService : validate accounts
+TransferService -> TransferService : validate currency
+TransferService -> TransferService : validate amount
+TransferService -> TransferService : check balance
+
+TransferService -> TransferService : debit(fromAccount)
+TransferService -> TransferService : credit(toAccount)
+
+TransferService -> TransferRepository : save(transfer)
+TransferRepository --> TransferService : savedTransfer
+
+TransferService -> AccountTransactionRepository : save(TRANSFER_OUT)
+AccountTransactionRepository --> TransferService : outgoingTransaction
+
+TransferService -> AccountTransactionRepository : save(TRANSFER_IN)
+AccountTransactionRepository --> TransferService : incomingTransaction
+
+TransferService --> TransferController : TransferResponse
+
+deactivate TransferService
+
+TransferController --> Customer : 201 Created
+
+@enduml
