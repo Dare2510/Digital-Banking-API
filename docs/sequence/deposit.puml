@@ -1,0 +1,32 @@
+@startuml
+
+actor Staff
+participant DepositController
+participant DepositService
+participant AccountRepository
+participant AccountTransactionRepository
+
+Staff -> DepositController : POST /accounts/{id}/deposits
+DepositController -> DepositService : depositMoney(accountId, request)
+
+activate DepositService
+
+DepositService -> AccountRepository : findById(accountId)
+AccountRepository --> DepositService : Account
+
+DepositService -> DepositService : validateAmount()
+DepositService -> DepositService : validateCurrency()
+DepositService -> DepositService : validateAccountStatus()
+
+DepositService -> DepositService : credit(account)
+
+DepositService -> AccountTransactionRepository : save(DEPOSIT)
+AccountTransactionRepository --> DepositService : AccountTransaction
+
+DepositService --> DepositController : DepositResponse
+
+deactivate DepositService
+
+DepositController --> Staff : 201 Created
+
+@enduml
