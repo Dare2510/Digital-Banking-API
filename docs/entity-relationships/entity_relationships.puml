@@ -1,0 +1,80 @@
+@startchen
+
+entity USER {
+    id <<key>>
+    name
+    surname
+    email <<Unique>>
+    password_hash
+    street
+    city
+    zip_code
+    country
+    role
+    created_at
+}
+
+entity ACCOUNT {
+    id <<key>>
+    account_number <<Unique>>
+    user_id <<FK>>
+    balance
+    currency
+    status
+    version
+    created_at
+}
+
+entity TRANSFER {
+    id <<key>>
+    from_account_id <<FK>>
+    to_account_id <<FK>>
+    amount
+    currency
+    status
+    created_at
+    updated_at
+}
+
+entity ACCOUNT_TRANSACTION {
+    id <<key>>
+    account_id <<FK>>
+    transfer_id <<FK>>
+    type
+    amount
+    balance_after
+    reference
+    created_at
+}
+
+relationship OWNS {
+}
+
+relationship FROM_ACCOUNT {
+}
+
+relationship TO_ACCOUNT {
+}
+
+relationship HAS_TRANSACTION {
+}
+
+relationship RELATED_TRANSFER {
+}
+
+OWNS -(0,N)- USER
+OWNS -(1,1)- ACCOUNT
+
+FROM_ACCOUNT -(1,1)- TRANSFER
+FROM_ACCOUNT -(0,N)- ACCOUNT
+
+TO_ACCOUNT -(1,1)- TRANSFER
+TO_ACCOUNT -(0,N)- ACCOUNT
+
+HAS_TRANSACTION -(1,1)- ACCOUNT_TRANSACTION
+HAS_TRANSACTION -(0,N)- ACCOUNT
+
+RELATED_TRANSFER -(0,1)- ACCOUNT_TRANSACTION
+RELATED_TRANSFER -(0,N)- TRANSFER
+
+@endchen
