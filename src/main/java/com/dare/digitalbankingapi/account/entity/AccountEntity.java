@@ -25,8 +25,6 @@ public class AccountEntity {
 
 	private BigDecimal balance;
 
-	//private User owner;
-
 	private Currency currency;
 
 	private AccountStatus status;
