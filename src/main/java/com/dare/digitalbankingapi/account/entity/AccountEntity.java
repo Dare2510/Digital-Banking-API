@@ -25,8 +25,10 @@ public class AccountEntity {
 
 	private BigDecimal balance;
 
+	@Enumerated(EnumType.STRING)
 	private Currency currency;
 
+	@Enumerated(EnumType.STRING)
 	private AccountStatus status;
 
 	@Version
