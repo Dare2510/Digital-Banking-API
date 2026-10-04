@@ -1,6 +1,7 @@
 package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
+import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,20 @@ public class GlobalExceptionHandler {
 	//Handle Exceptions
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex ,
+	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
 																			   HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(EmailNotAvailableException.class)
-	public ResponseEntity<ErrorResponse> handleEmailNotAvailableException(EmailNotAvailableException ex ,HttpServletRequest request) {
+	public ResponseEntity<ErrorResponse> handleEmailNotAvailableException(EmailNotAvailableException ex, HttpServletRequest request) {
 
 		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, HttpServletRequest request) {
+
+		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
 }

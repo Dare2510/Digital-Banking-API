@@ -1,17 +1,19 @@
 package com.dare.digitalbankingapi.user.dto;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@RequiredArgsConstructor
+@Setter
+@NoArgsConstructor
 public class UserProfileResponse {
 
-	private final String name;
-	private final String surname;
-	private final String street;
-	private final String houseNumber;
-	private final String city;
-	private final String zipCode;
-	private final String country;
+	private String name;
+	private String surname;
+	private String street;
+	private String houseNumber;
+	private String city;
+	private String zipCode;
+	private String country;
 }

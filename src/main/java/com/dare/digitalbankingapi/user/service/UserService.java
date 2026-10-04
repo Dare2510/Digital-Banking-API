@@ -5,7 +5,9 @@ import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
+import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -24,7 +26,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final ModelMapper modelMapper;
 
-
+	@Transactional
 	public UserResponse createCostumerUser(UserRequest userRequest) {
 		String email = userRequest.getEmail().toLowerCase().trim();
 		String password = userRequest.getPassword();
@@ -44,7 +46,7 @@ public class UserService {
 			newCustomer.setCreatedAt(LocalDateTime.now());
 			userRepository.saveAndFlush(newCustomer);
 
-			return modelMapper.map(userRequest, UserResponse.class);
+			return modelMapper.map(newCustomer, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {
 			log.info("Email {} is already taken", email);
@@ -54,7 +56,17 @@ public class UserService {
 
 	private boolean emailExists(String email) {
 		String trimmedEmail = email.toLowerCase().trim();
-		return userRepository.emailExists(trimmedEmail);
+		return userRepository.existsByEmail(trimmedEmail);
+	}
+
+	public UserEntity getUserById(Long userId) {
+		return userRepository.findById(userId)
+				.orElseThrow(
+						() -> {
+							log.info("User with id {} was not found", userId);
+							return new UserNotFoundException(userId);
+						}
+				);
 	}
 
 }

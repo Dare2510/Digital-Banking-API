@@ -20,6 +20,13 @@ public class UserEntity {
 
 	private String email;
 
+	@OneToOne(
+			mappedBy = "user",
+			cascade = CascadeType.ALL,
+			orphanRemoval = true
+	)
+	private UserProfileEntity profile;
+
 	private String passwordHash;
 
 	@Enumerated(EnumType.STRING)

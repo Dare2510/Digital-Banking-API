@@ -12,6 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserProfileRequest {
 
+	//temporary
+	private Long userId;
+
 	@NotBlank(message = "Name is required")
 	@Pattern(
 			regexp = "^[a-zA-Z]+$",

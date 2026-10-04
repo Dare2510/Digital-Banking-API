@@ -1,14 +1,18 @@
 package com.dare.digitalbankingapi.user.dto;
 
 import com.dare.digitalbankingapi.user.entity.Role;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@RequiredArgsConstructor
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserResponse {
 
-	private final Long id;
-	private final String email;
-	private final Role role;
+	private Long id;
+	private String email;
+	private Role role;
 }
