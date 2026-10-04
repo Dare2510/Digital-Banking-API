@@ -1,6 +1,5 @@
 package com.dare.digitalbankingapi.user.entity;
 
-import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,13 +18,7 @@ public class UserEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String name;
-	private String surname;
 	private String email;
-	private String street;
-	private String city;
-	private String zipCode;
-	private String country;
 
 	private String passwordHash;
 
