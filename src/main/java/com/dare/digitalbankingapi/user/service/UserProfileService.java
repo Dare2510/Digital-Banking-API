@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
+import com.dare.digitalbankingapi.user.entity.ProfileStatus;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
@@ -46,6 +47,8 @@ public class UserProfileService {
 		);
 		try {
 			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
+
+			savedProfile.setStatus(ProfileStatus.COMPLETE);
 
 			return modelMapper.map(savedProfile, UserProfileResponse.class);
 

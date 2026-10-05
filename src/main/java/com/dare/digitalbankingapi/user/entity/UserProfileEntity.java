@@ -32,6 +32,9 @@ public class UserProfileEntity {
 	private String zipCode;
 	private String country;
 
+	@Enumerated(EnumType.STRING)
+	private ProfileStatus status;
+
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -45,6 +48,7 @@ public class UserProfileEntity {
 		this.city = city;
 		this.zipCode = zipCode;
 		this.country = country;
+		this.status = ProfileStatus.INCOMPLETE;
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
 

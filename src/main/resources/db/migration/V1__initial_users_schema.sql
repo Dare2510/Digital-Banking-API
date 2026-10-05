@@ -20,6 +20,7 @@ CREATE TABLE user_profile
     city         VARCHAR(100) NOT NULL,
     zip_code     VARCHAR(15)  NOT NULL,
     country      VARCHAR(100) NOT NULL,
+    status       VARCHAR(10)  NOT NULL,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP,
 
