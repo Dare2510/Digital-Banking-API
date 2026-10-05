@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
+import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, HttpServletRequest request) {
 
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(UserProfileAlreadyExistsException.class)
+	public ResponseEntity<ErrorResponse> handleUserProfileAlreadyExistsException(UserProfileAlreadyExistsException ex, HttpServletRequest request) {
+
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
 }

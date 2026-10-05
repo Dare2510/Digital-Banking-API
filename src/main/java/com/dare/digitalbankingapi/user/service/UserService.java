@@ -15,8 +15,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -39,17 +37,19 @@ public class UserService {
 		}
 
 		try {
-			UserEntity newCustomer = new UserEntity();
-			newCustomer.setEmail(email);
-			newCustomer.setPasswordHash(passwordEncoder.encode(password));
-			newCustomer.setRole(Role.CUSTOMER);
-			newCustomer.setCreatedAt(LocalDateTime.now());
+
+			UserEntity newCustomer = new UserEntity(
+					email,
+					passwordEncoder.encode(password),
+					Role.CUSTOMER
+			);
+
 			userRepository.saveAndFlush(newCustomer);
 
 			return modelMapper.map(newCustomer, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {
-			log.info("Email {} is already taken", email);
+			log.info("Could not create user, email {} is already taken", email);
 			throw new EmailNotAvailableException(email);
 		}
 	}

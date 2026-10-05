@@ -4,16 +4,18 @@ import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
+import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class UserProfileService {
 
 	private final UserService userService;
@@ -22,24 +24,37 @@ public class UserProfileService {
 
 	@Transactional
 	public UserProfileResponse createUserProfile(UserProfileRequest userProfileRequest) {
+
 		UserEntity connectedUser = userService.getUserById(userProfileRequest.getUserId());
 
-		UserProfileEntity profileEntity = new UserProfileEntity();
-		profileEntity.setUser(connectedUser);
-		profileEntity.setName(userProfileRequest.getName());
-		profileEntity.setSurname(userProfileRequest.getSurname());
-		profileEntity.setStreet(userProfileRequest.getStreet());
-		profileEntity.setHouseNumber(userProfileRequest.getHouseNumber());
-		profileEntity.setCity(userProfileRequest.getCity());
-		profileEntity.setZipCode(userProfileRequest.getZipCode());
-		profileEntity.setCountry(userProfileRequest.getCountry());
-		profileEntity.setCreatedAt(LocalDateTime.now());
-		profileEntity.setUpdatedAt(LocalDateTime.now());
+		boolean profileExists = userProfileRepository.existsByUserId(userProfileRequest.getUserId());
 
-		userProfileRepository.save(profileEntity);
+		if (profileExists) {
+			log.info("User Profile for user {} already exists", connectedUser.getId());
+			throw new UserProfileAlreadyExistsException(connectedUser.getId());
+		}
 
-		return modelMapper.map(profileEntity, UserProfileResponse.class);
+		UserProfileEntity profileEntity = new UserProfileEntity(
+				connectedUser,
+				userProfileRequest.getName(),
+				userProfileRequest.getSurname(),
+				userProfileRequest.getStreet(),
+				userProfileRequest.getHouseNumber(),
+				userProfileRequest.getCity(),
+				userProfileRequest.getZipCode(),
+				userProfileRequest.getCountry()
+		);
+		try {
+			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
 
+			return modelMapper.map(savedProfile, UserProfileResponse.class);
+
+		} catch (DataIntegrityViolationException e) {
+
+			log.warn("Could not create profile for user {}", connectedUser.getId());
+
+			throw new UserProfileAlreadyExistsException(connectedUser.getId());
+		}
 	}
 
 
