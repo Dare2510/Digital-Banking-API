@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.user.entity.ProfileStatus;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
+import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,14 @@ public class UserProfileService {
 
 			throw new UserProfileAlreadyExistsException(connectedUser.getId());
 		}
+	}
+
+	public UserProfileEntity getProfileEntity(Long userId) {
+		return userProfileRepository.findById(userId).orElseThrow(
+		() -> {
+			log.error("Could not find profile for user {}", userId);
+			return new UserProfileNotFoundException(userId);
+		});
 	}
 
 

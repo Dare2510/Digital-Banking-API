@@ -35,6 +35,7 @@ public class UserEntity {
 	private LocalDateTime createdAt;
 
 	public UserEntity(String email,String passwordHash, Role role) {
+		this.email = email;
 		this.passwordHash = passwordHash;
 		this.role = role;
 		this.createdAt = LocalDateTime.now();

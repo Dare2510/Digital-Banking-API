@@ -11,6 +11,6 @@ CREATE TABLE account
     balance        NUMERIC(19, 2)     NOT NULL,
     currency       VARCHAR(3),
     status         VARCHAR            NOT NULL,
-    version        BIGINT             NOT NULL,
+    version        BIGINT             NOT NULL DEFAULT 0,
     created_at     TIMESTAMP          NOT NULL
 );
