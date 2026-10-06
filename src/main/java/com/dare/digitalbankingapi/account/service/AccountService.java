@@ -4,7 +4,6 @@ import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
-import com.dare.digitalbankingapi.user.entity.ProfileStatus;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
@@ -21,10 +20,8 @@ import java.util.UUID;
 public class AccountService {
 
 	private final AccountRepository accountRepository;
-	private final UserProfileRepository  userProfileRepository;
 	private final UserProfileService userProfileService;
 	private final UserService userService;
-	private final ModelMapper modelMapper;
 
 
 	public AccountResponse createAccount(AccountRequest accountRequest) {
