@@ -3,14 +3,18 @@ package com.dare.digitalbankingapi.transfer.service;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
+import com.dare.digitalbankingapi.transaction.entity.TransactionType;
+import com.dare.digitalbankingapi.transaction.service.TransactionService;
+import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
+import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
 import com.dare.digitalbankingapi.transfer.exceptions.SufficientBalanceException;
-import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
-import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +26,8 @@ public class TransferService {
 
 	private final TransferRepository transferRepository;
 	private final AccountService accountService;
+	private final TransactionService transactionService;
+	private final ModelMapper modelMapper;
 
 	public TransferResponse createTransferBetweenAccounts(TransferRequest transferRequest) {
 
@@ -35,8 +41,8 @@ public class TransferService {
 		BigDecimal currentBalance = fromAccount.getBalance();
 		BigDecimal transferAmount = transferRequest.getAmount();
 
-		checkBalance(fromAccount,toAccount,transferAmount,currentBalance);
-		checkCurrencies(fromAccount,toAccount);
+		checkBalance(fromAccount, toAccount, transferAmount, currentBalance);
+		checkCurrencies(fromAccount, toAccount);
 
 		TransferEntity transfer = new TransferEntity(
 				fromAccount,
@@ -45,11 +51,17 @@ public class TransferService {
 				fromAccount.getCurrency()
 		);
 
+		transferRepository.saveAndFlush(transfer);
 
+		TransactionEntity transactionFirstAccount =
+				transactionService.createTransaction(fromAccount, transferRequest.getReference(),
+						transfer, TransactionType.TRANSFER_OUT);
 
+		TransactionEntity transactionSecondAccount =
+				transactionService.createTransaction(fromAccount, transferRequest.getReference(),
+						transfer, TransactionType.TRANSFER_IN);
 
-
-
+		//Todo
 	}
 
 	//Helper Methods
@@ -58,7 +70,7 @@ public class TransferService {
 	private void checkBalance(AccountEntity fromAccount, AccountEntity toAccount, BigDecimal transferAmount, BigDecimal currentBalance) {
 		boolean enoughBalance = currentBalance.subtract(transferAmount).compareTo(BigDecimal.ZERO) >= 0;
 
-		if(!enoughBalance) {
+		if (!enoughBalance) {
 			log.info("Balance is insufficient");
 			throw new SufficientBalanceException();
 		}
@@ -71,7 +83,7 @@ public class TransferService {
 
 		boolean currencyIsEqual = fromCurrency.equals(toCurrency);
 
-		if(!currencyIsEqual) {
+		if (!currencyIsEqual) {
 			log.info("Currency is not equal");
 			throw new NotEqualCurrencyException();
 		}

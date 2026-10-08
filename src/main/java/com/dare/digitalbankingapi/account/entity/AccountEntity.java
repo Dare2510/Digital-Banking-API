@@ -2,11 +2,9 @@ package com.dare.digitalbankingapi.account.entity;
 
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import jakarta.persistence.*;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

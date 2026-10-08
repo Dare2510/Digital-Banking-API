@@ -8,7 +8,7 @@ CREATE TABLE transfers
     to_account_id   BIGINT         NOT NULL,
     FOREIGN KEY (to_account_id) REFERENCES account (id),
 
-    currency VARCHAR (3) NOT NULL,
+    currency        VARCHAR(3)     NOT NULL,
 
     status          VARCHAR(10)    NOT NULL,
     created_at      TIMESTAMP      NOT NULL,

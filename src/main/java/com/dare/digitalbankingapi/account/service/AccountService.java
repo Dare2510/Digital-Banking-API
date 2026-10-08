@@ -50,7 +50,7 @@ public class AccountService {
 				.toUpperCase();
 	}
 
-	private AccountResponse responseBuilder(UserProfileEntity ownerProfile, AccountEntity account){
+	private AccountResponse responseBuilder(UserProfileEntity ownerProfile, AccountEntity account) {
 		return new AccountResponse(
 				ownerProfile.getName(),
 				ownerProfile.getSurname(),
@@ -64,7 +64,7 @@ public class AccountService {
 		return accountRepository.findById(accountId)
 				.orElseThrow(
 						() -> {
-							log.info("Account with id: {} not found" ,accountId);
+							log.info("Account with id: {} not found", accountId);
 							return new AccountNotFoundException(accountId);
 						}
 				);

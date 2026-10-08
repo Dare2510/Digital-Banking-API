@@ -63,10 +63,10 @@ public class UserProfileService {
 
 	public UserProfileEntity getProfileEntity(Long userId) {
 		return userProfileRepository.findById(userId).orElseThrow(
-		() -> {
-			log.error("Could not find profile for user {}", userId);
-			return new UserProfileNotFoundException(userId);
-		});
+				() -> {
+					log.error("Could not find profile for user {}", userId);
+					return new UserProfileNotFoundException(userId);
+				});
 	}
 
 

@@ -2,8 +2,8 @@ CREATE TABLE account
 (
     id             BIGSERIAL PRIMARY KEY,
 
-    user_id BIGINT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    user_id        BIGINT             NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id),
 
     account_number VARCHAR(50) UNIQUE NOT NULL,
     CONSTRAINT UK_account_number UNIQUE (account_number),

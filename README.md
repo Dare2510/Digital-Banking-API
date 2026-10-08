@@ -2,7 +2,8 @@
 
 A Spring Boot backend application that simulates core digital banking operations.
 
-The goal of this project is to build a transactional banking system with a strong focus on data consistency, concurrency, security and database integrity.
+The goal of this project is to build a transactional banking system with a strong focus on data consistency,
+concurrency, security and database integrity.
 
 ## Planned Core Features
 

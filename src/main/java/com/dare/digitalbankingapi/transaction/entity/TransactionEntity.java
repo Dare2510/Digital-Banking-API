@@ -39,4 +39,16 @@ public class TransactionEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "transfer_id")
 	private TransferEntity transfer;
+
+	public TransactionEntity(AccountEntity account, BigDecimal amount, String reference, TransactionType type, BigDecimal balanceAfter, TransferEntity transfer) {
+		this.account = account;
+		this.amount = amount;
+		this.reference = reference;
+		this.type = type;
+		this.balanceAfter = balanceAfter;
+		this.transfer = transfer;
+		this.createdAt = LocalDateTime.now();
+
+
+	}
 }

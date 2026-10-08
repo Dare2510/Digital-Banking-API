@@ -18,8 +18,8 @@ import java.time.LocalDateTime;
 public class TransferEntity {
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	private BigDecimal amount;
 
@@ -40,7 +40,7 @@ public class TransferEntity {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	public TransferEntity(AccountEntity fromAccount, AccountEntity toAccount,BigDecimal amount, Currency currency) {
+	public TransferEntity(AccountEntity fromAccount, AccountEntity toAccount, BigDecimal amount, Currency currency) {
 		this.fromAccount = fromAccount;
 		this.toAccount = toAccount;
 		this.amount = amount;

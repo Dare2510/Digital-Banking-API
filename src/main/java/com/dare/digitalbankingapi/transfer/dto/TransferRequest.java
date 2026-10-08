@@ -1,6 +1,6 @@
 package com.dare.digitalbankingapi.transfer.dto;
 
-import com.dare.digitalbankingapi.account.entity.Currency;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,5 +22,6 @@ public class TransferRequest {
 	@Positive(message = "Amount id must be > 0")
 	private BigDecimal amount;
 
-	private Currency currency;
+	@NotNull(message = "Reference ist required")
+	private String reference;
 }
