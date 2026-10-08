@@ -3,20 +3,21 @@ package com.dare.digitalbankingapi.account.service;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
+import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
-import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class AccountService {
 
 	private final AccountRepository accountRepository;
@@ -57,6 +58,17 @@ public class AccountService {
 				account.getCurrency().toString(),
 				account.getStatus().toString()
 		);
+	}
+
+	public AccountEntity getAccount(Long accountId) {
+		return accountRepository.findById(accountId)
+				.orElseThrow(
+						() -> {
+							log.info("Account with id: {} not found" ,accountId);
+							return new AccountNotFoundException(accountId);
+						}
+				);
+
 	}
 
 
