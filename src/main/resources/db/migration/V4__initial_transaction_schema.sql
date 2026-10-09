@@ -7,8 +7,7 @@ CREATE TABLE transaction
     amount        NUMERIC(19, 2)     NOT NULL,
     balance_after NUMERIC(19, 2)     NOT NULL,
 
-    reference     VARCHAR(30) UNIQUE NOT NULL,
-    constraint UK_reference UNIQUE (reference),
+    reference     VARCHAR(30)        NOT NULL,
 
     created_at    TIMESTAMP          NOT NULL,
 

@@ -5,6 +5,7 @@ import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
+import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -37,7 +39,7 @@ public class AccountService {
 				accountRequest.getCurrency()
 		);
 
-		accountRepository.save(newAccount);
+		accountRepository.saveAndFlush(newAccount);
 
 		return responseBuilder(ownerProfile, newAccount);
 
@@ -69,6 +71,18 @@ public class AccountService {
 						}
 				);
 
+	}
+
+	public void updateBalance(AccountEntity account, BigDecimal transferAmount, TransactionType transactionType) {
+		boolean incoming = transactionType == TransactionType.DEPOSIT || transactionType == TransactionType.TRANSFER_IN;
+
+		if (incoming) {
+			account.setBalance(account.getBalance().add(transferAmount));
+		} else {
+			account.setBalance(account.getBalance().subtract(transferAmount));
+		}
+
+		accountRepository.saveAndFlush(account);
 	}
 
 

@@ -50,5 +50,17 @@ public class TransferEntity {
 		this.updatedAt = LocalDateTime.now();
 	}
 
+	public TransferEntity(AccountEntity fromAccount, BigDecimal amount, Currency currency) {
+		this.fromAccount = fromAccount;
+		this.toAccount = fromAccount;
+		this.amount = amount;
+		this.currency = currency;
+		this.status = TransferStatus.CREATED;
+		this.createdAt = LocalDateTime.now();
+		this.updatedAt = LocalDateTime.now();
+	}
+
+
+
 
 }
