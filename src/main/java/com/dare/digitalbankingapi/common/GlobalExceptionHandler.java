@@ -1,8 +1,9 @@
 package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
+import com.dare.digitalbankingapi.transaction.exceptions.InvalidTransactionTypeException;
+import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
-import com.dare.digitalbankingapi.transfer.exceptions.SufficientBalanceException;
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
@@ -81,8 +82,15 @@ public class GlobalExceptionHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
-	@ExceptionHandler(SufficientBalanceException.class)
-	public ResponseEntity<ErrorResponse> handleSufficientBalanceException(SufficientBalanceException ex, HttpServletRequest request) {
+	@ExceptionHandler(InsufficientBalanceException.class)
+	public ResponseEntity<ErrorResponse> handleSufficientBalanceException(InsufficientBalanceException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
+	//Transaction
+
+	@ExceptionHandler(InvalidTransactionTypeException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidTransactionTypeException(InvalidTransactionTypeException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 

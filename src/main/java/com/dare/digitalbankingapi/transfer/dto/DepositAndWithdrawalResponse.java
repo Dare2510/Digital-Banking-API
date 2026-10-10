@@ -9,12 +9,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransferResponse {
+public class DepositAndWithdrawalResponse {
 
 	private Long fromAccountId;
-	private Long toAccountId;
-	private Long transferId;
 	private BigDecimal amount;
-	private String reference;
+	private BigDecimal balanceAfter;
 
 }

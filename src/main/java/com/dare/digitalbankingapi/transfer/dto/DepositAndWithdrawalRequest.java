@@ -1,6 +1,5 @@
 package com.dare.digitalbankingapi.transfer.dto;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +10,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @AllArgsConstructor
-public class DepositRequest {
+public class DepositAndWithdrawalRequest {
 
 	@Positive(message = "From Account id must be > 0")
 	private Long accountId;

@@ -3,20 +3,19 @@ package com.dare.digitalbankingapi.transfer.service;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.service.AccountService;
-import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
-import com.dare.digitalbankingapi.transfer.dto.DepositRequest;
+import com.dare.digitalbankingapi.transfer.dto.DepositAndWithdrawalRequest;
+import com.dare.digitalbankingapi.transfer.dto.DepositAndWithdrawalResponse;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
+import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
-import com.dare.digitalbankingapi.transfer.exceptions.SufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,7 +29,6 @@ public class TransferService {
 	private final TransferRepository transferRepository;
 	private final AccountService accountService;
 	private final TransactionService transactionService;
-	private final ModelMapper modelMapper;
 
 	@Transactional
 	public TransferResponse createTransferBetweenAccounts(TransferRequest transferRequest) {
@@ -57,44 +55,46 @@ public class TransferService {
 
 		transferRepository.saveAndFlush(transfer);
 
-		TransactionEntity transactionFirstAccount =
-				transactionService.createTransaction(fromAccount, transferRequest.getReference(),
-						transfer, TransactionType.TRANSFER_OUT);
+		transactionService.createTransaction(fromAccount, transferRequest.getReference(),
+				transfer, TransactionType.TRANSFER_OUT);
 
-		TransactionEntity transactionSecondAccount =
-				transactionService.createTransaction(fromAccount, transferRequest.getReference(),
-						transfer, TransactionType.TRANSFER_IN);
+		transactionService.createTransaction(fromAccount, transferRequest.getReference(),
+				transfer, TransactionType.TRANSFER_IN);
 
-		accountService.updateBalance(fromAccount,transferAmount,TransactionType.TRANSFER_OUT);
-		accountService.updateBalance(toAccount,transferAmount,TransactionType.TRANSFER_IN);
+		accountService.updateBalance(fromAccount, transferAmount, TransactionType.TRANSFER_OUT);
+		accountService.updateBalance(toAccount, transferAmount, TransactionType.TRANSFER_IN);
 
-		return modelMapper.map(transfer, TransferResponse.class);
+		return buildTransferResponse(transfer, transferRequest);
 	}
 
 	@Transactional
-	public TransferResponse deposit(DepositRequest depositRequest) {
-		String reference = "DEPOSIT " + LocalDate.now();
+	public DepositAndWithdrawalResponse depositAndWithdrawal(DepositAndWithdrawalRequest depositAndWithdrawalRequest, TransactionType transactionType) {
 
-		AccountEntity accountToDeposit = accountService.getAccount(depositRequest.getAccountId());
+		transactionService.transactionTypeIsValidForDepositAndWithdrawal(transactionType);
 
-		TransferEntity deposit =  new TransferEntity(
+		String reference = transactionType.name() + " " + LocalDate.now();
+
+		AccountEntity accountToDeposit = accountService.getAccount(depositAndWithdrawalRequest.getAccountId());
+
+		TransferEntity deposit = new TransferEntity(
 				accountToDeposit,
-				depositRequest.getAmount(),
+				depositAndWithdrawalRequest.getAmount(),
 				accountToDeposit.getCurrency()
 		);
 
 		transferRepository.saveAndFlush(deposit);
 
-		TransactionEntity depositTransaction =
-				transactionService.createTransaction(
-						accountToDeposit,
-						reference,
-						deposit,
-						TransactionType.DEPOSIT);
 
-		accountService.updateBalance(accountToDeposit,depositTransaction.getAmount(),TransactionType.DEPOSIT);
+		transactionService.createTransaction(
+				accountToDeposit,
+				reference,
+				deposit,
+				transactionType);
 
-		return modelMapper.map(deposit, TransferResponse.class);
+
+		accountService.updateBalance(accountToDeposit, depositAndWithdrawalRequest.getAmount(), transactionType);
+
+		return buildDepositAndWithdrawalResponse(accountToDeposit, depositAndWithdrawalRequest);
 
 	}
 
@@ -106,7 +106,7 @@ public class TransferService {
 
 		if (!enoughBalance) {
 			log.info("Balance is insufficient");
-			throw new SufficientBalanceException();
+			throw new InsufficientBalanceException();
 		}
 
 	}
@@ -121,6 +121,29 @@ public class TransferService {
 			log.info("Currency is not equal");
 			throw new NotEqualCurrencyException();
 		}
+	}
+
+	private DepositAndWithdrawalResponse buildDepositAndWithdrawalResponse(AccountEntity account,
+																		   DepositAndWithdrawalRequest depositAndWithdrawalRequest) {
+		return DepositAndWithdrawalResponse.builder()
+				.fromAccountId(account.getId())
+				.amount(depositAndWithdrawalRequest.getAmount())
+				.balanceAfter(account.getBalance())
+				.build();
+
+	}
+
+	private TransferResponse buildTransferResponse(TransferEntity transfer,
+												   TransferRequest transferRequest) {
+
+		return TransferResponse.builder()
+				.fromAccountId(transferRequest.getFromAccountId())
+				.toAccountId(transferRequest.getToAccountId())
+				.transferId(transfer.getId())
+				.amount(transfer.getAmount())
+				.reference(transferRequest.getReference())
+				.build();
+
 	}
 
 
