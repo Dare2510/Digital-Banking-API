@@ -12,9 +12,11 @@ import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,6 +27,7 @@ public class AccountService {
 	private final AccountRepository accountRepository;
 	private final UserProfileService userProfileService;
 	private final UserService userService;
+	private final ModelMapper modelMapper;
 
 
 	public AccountResponse createAccount(AccountRequest accountRequest) {
@@ -45,6 +48,24 @@ public class AccountService {
 
 	}
 
+	public AccountResponse viewAccountDetails(Long accountId) {
+		AccountEntity account = getAccount(accountId);
+		UserProfileEntity user = userProfileService.getProfileEntity(account.getOwner().getId());
+
+		return responseBuilder(user, account);
+
+
+	}
+
+	public List<AccountResponse> viewAllAccounts(Long userId) {
+		UserEntity owner = userService.getUserById(userId);
+
+		return accountRepository.findByOwner(owner).stream().
+				map(account -> modelMapper.map(account,AccountResponse.class))
+				.toList();
+
+	}
+
 	private String generateAccountNumber() {
 		return "ACC-" + UUID.randomUUID()
 				.toString()
@@ -57,6 +78,7 @@ public class AccountService {
 				ownerProfile.getName(),
 				ownerProfile.getSurname(),
 				account.getAccountNumber(),
+				account.getBalance(),
 				account.getCurrency().toString(),
 				account.getStatus().toString()
 		);
