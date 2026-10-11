@@ -3,6 +3,9 @@ package com.dare.digitalbankingapi.account.controller;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
+import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
+import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,20 +18,29 @@ import java.util.List;
 public class AccountController {
 
 	private final AccountService accountService;
+	private final TransactionService transactionService;
 
 	@PostMapping
 	public ResponseEntity<AccountResponse> createAccount(@RequestBody AccountRequest accountRequest) {
+
 		return ResponseEntity.ok(accountService.createAccount(accountRequest));
 	}
 
-	@GetMapping("/{userId}")
+	@GetMapping("/all/{userId}")
 	public ResponseEntity<List<AccountResponse>> findAll(@PathVariable Long userId) {
-		return ResponseEntity.ok().body(accountService.viewAllAccounts(userId));
+
+		return ResponseEntity.ok(accountService.viewAllAccounts(userId));
 	}
 
 	@GetMapping("/{accountId}")
-	public ResponseEntity<AccountResponse> getAccount(@PathVariable("accountId") Long accountId) {
+	public ResponseEntity<AccountResponse> getAccount(@PathVariable Long accountId) {
+
 		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
 	}
 
+	@PatchMapping("/withdraw")
+	public ResponseEntity<TransactionResponse> withdraw(@RequestBody TransactionRequest transactionRequest) {
+
+		return ResponseEntity.ok(transactionService.withdraw(transactionRequest));
+	}
 }

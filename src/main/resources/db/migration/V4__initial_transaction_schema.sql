@@ -14,6 +14,6 @@ CREATE TABLE transaction
     account_id    BIGINT         NOT NULL,
     FOREIGN KEY (account_id) REFERENCES account (id),
 
-    transfer_id   BIGINT         NOT NULL,
+    transfer_id   BIGINT,
     FOREIGN KEY (transfer_id) REFERENCES transfers (id)
 )

@@ -51,4 +51,15 @@ public class TransactionEntity {
 
 
 	}
+
+	public TransactionEntity(AccountEntity account, BigDecimal amount, String reference, TransactionType type, BigDecimal balanceAfter) {
+		this.account = account;
+		this.amount = amount;
+		this.reference = reference;
+		this.type = type;
+		this.balanceAfter = balanceAfter;
+		this.createdAt = LocalDateTime.now();
+
+
+	}
 }

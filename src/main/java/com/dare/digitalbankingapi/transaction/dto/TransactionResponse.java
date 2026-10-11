@@ -1,4 +1,4 @@
-package com.dare.digitalbankingapi.transfer.dto;
+package com.dare.digitalbankingapi.transaction.dto;
 
 import lombok.*;
 
@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DepositAndWithdrawalResponse {
+public class TransactionResponse {
 
 	private Long fromAccountId;
 	private BigDecimal amount;

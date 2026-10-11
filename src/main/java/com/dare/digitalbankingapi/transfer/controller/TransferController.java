@@ -1,14 +1,14 @@
 package com.dare.digitalbankingapi.transfer.controller;
 
-import com.dare.digitalbankingapi.transaction.entity.TransactionType;
-import com.dare.digitalbankingapi.transfer.dto.DepositAndWithdrawalRequest;
-import com.dare.digitalbankingapi.transfer.dto.DepositAndWithdrawalResponse;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/transfers")
@@ -20,11 +20,6 @@ public class TransferController {
 	@PostMapping("/transfer")
 	public ResponseEntity<TransferResponse> createTransfer(@RequestBody TransferRequest transferRequest) {
 		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(transferRequest));
-	}
-
-	@PostMapping("/{transactionType}")
-	public ResponseEntity<DepositAndWithdrawalResponse> depositAndWithdrawal(@RequestBody DepositAndWithdrawalRequest depositAndWithdrawalRequest, @PathVariable TransactionType transactionType) {
-		return ResponseEntity.ok(transferService.depositAndWithdrawal(depositAndWithdrawalRequest, transactionType));
 	}
 
 

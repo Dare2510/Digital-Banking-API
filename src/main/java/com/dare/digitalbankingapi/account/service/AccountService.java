@@ -12,7 +12,6 @@ import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,13 +26,12 @@ public class AccountService {
 	private final AccountRepository accountRepository;
 	private final UserProfileService userProfileService;
 	private final UserService userService;
-	private final ModelMapper modelMapper;
-
 
 	public AccountResponse createAccount(AccountRequest accountRequest) {
+
 		Long userId = accountRequest.getUserId();
 
-		UserEntity owner = userService.getUserById(accountRequest.getUserId());
+		UserEntity owner = userService.getUserById(userId);
 		UserProfileEntity ownerProfile = userProfileService.getProfileEntity(userId);
 
 		AccountEntity newAccount = new AccountEntity(
@@ -45,28 +43,59 @@ public class AccountService {
 		accountRepository.saveAndFlush(newAccount);
 
 		return responseBuilder(ownerProfile, newAccount);
-
 	}
 
 	public AccountResponse viewAccountDetails(Long accountId) {
+
 		AccountEntity account = getAccount(accountId);
-		UserProfileEntity user = userProfileService.getProfileEntity(account.getOwner().getId());
 
-		return responseBuilder(user, account);
+		UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
 
-
+		return responseBuilder(userProfile, account);
 	}
 
 	public List<AccountResponse> viewAllAccounts(Long userId) {
+
 		UserEntity owner = userService.getUserById(userId);
 
-		return accountRepository.findByOwner(owner).stream().
-				map(account -> modelMapper.map(account,AccountResponse.class))
-				.toList();
+		UserProfileEntity userProfile = userProfileService.getProfileEntity(userId);
 
+		return accountRepository.findByOwner(owner)
+				.stream()
+				.map(account ->
+						responseBuilder(userProfile, account))
+				.toList();
+	}
+
+	public AccountEntity getAccount(Long accountId) {
+
+		return accountRepository.findById(accountId)
+				.orElseThrow(() -> {
+					log.info(
+							"Account with id {} not found",
+							accountId
+					);
+
+					return new AccountNotFoundException(accountId);
+				});
+	}
+
+	public void updateBalance(AccountEntity account, BigDecimal amount, TransactionType transactionType) {
+
+		boolean incoming = transactionType == TransactionType.DEPOSIT
+						|| transactionType == TransactionType.TRANSFER_IN;
+
+		if (incoming) {
+			account.setBalance(account.getBalance().add(amount));
+		} else {
+			account.setBalance(account.getBalance().subtract(amount));
+		}
+
+		accountRepository.saveAndFlush(account);
 	}
 
 	private String generateAccountNumber() {
+
 		return "ACC-" + UUID.randomUUID()
 				.toString()
 				.substring(0, 12)
@@ -74,6 +103,7 @@ public class AccountService {
 	}
 
 	private AccountResponse responseBuilder(UserProfileEntity ownerProfile, AccountEntity account) {
+
 		return new AccountResponse(
 				ownerProfile.getName(),
 				ownerProfile.getSurname(),
@@ -83,29 +113,4 @@ public class AccountService {
 				account.getStatus().toString()
 		);
 	}
-
-	public AccountEntity getAccount(Long accountId) {
-		return accountRepository.findById(accountId)
-				.orElseThrow(
-						() -> {
-							log.info("Account with id: {} not found", accountId);
-							return new AccountNotFoundException(accountId);
-						}
-				);
-
-	}
-
-	public void updateBalance(AccountEntity account, BigDecimal transferAmount, TransactionType transactionType) {
-		boolean incoming = transactionType == TransactionType.DEPOSIT || transactionType == TransactionType.TRANSFER_IN;
-
-		if (incoming) {
-			account.setBalance(account.getBalance().add(transferAmount));
-		} else {
-			account.setBalance(account.getBalance().subtract(transferAmount));
-		}
-
-		accountRepository.saveAndFlush(account);
-	}
-
-
 }
