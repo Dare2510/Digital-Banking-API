@@ -48,7 +48,7 @@ public class UserProfileService {
 		);
 		try {
 			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
-
+			log.info("Created User Profile for user {} ", connectedUser.getId());
 			savedProfile.setStatus(ProfileStatus.COMPLETE);
 
 			return modelMapper.map(savedProfile, UserProfileResponse.class);

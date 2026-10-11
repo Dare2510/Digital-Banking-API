@@ -11,12 +11,14 @@ import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class TransactionService {
 
 	private final TransactionRepository transactionRepository;
@@ -41,6 +43,7 @@ public class TransactionService {
 				);
 
 		transactionRepository.saveAndFlush(transaction);
+		log.info("Deposit transaction with id {} has been created ",transaction.getId());
 
 		return buildResponse(account, amount);
 	}
@@ -72,6 +75,7 @@ public class TransactionService {
 				);
 
 		transactionRepository.saveAndFlush(transaction);
+		log.info("Withdraw transaction with id {} has been created ",transaction.getId());
 
 		return buildResponse(account, amount);
 	}
@@ -90,6 +94,7 @@ public class TransactionService {
 				);
 
 		transactionRepository.saveAndFlush(transaction);
+		log.info("Transfer Transaction with {} id has been created", transaction.getId());
 	}
 
 	private TransactionResponse buildResponse(AccountEntity account, BigDecimal amount) {

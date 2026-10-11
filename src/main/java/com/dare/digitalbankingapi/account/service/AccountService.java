@@ -41,6 +41,7 @@ public class AccountService {
 		);
 
 		accountRepository.saveAndFlush(newAccount);
+		log.info("Created account with id {}", newAccount.getId());
 
 		return responseBuilder(ownerProfile, newAccount);
 	}
@@ -60,6 +61,8 @@ public class AccountService {
 
 		UserProfileEntity userProfile = userProfileService.getProfileEntity(userId);
 
+		log.info("Viewing all accounts with user id {}", owner.getId());
+
 		return accountRepository.findByOwner(owner)
 				.stream()
 				.map(account ->
@@ -75,7 +78,6 @@ public class AccountService {
 							"Account with id {} not found",
 							accountId
 					);
-
 					return new AccountNotFoundException(accountId);
 				});
 	}
@@ -92,6 +94,7 @@ public class AccountService {
 		}
 
 		accountRepository.saveAndFlush(account);
+		log.info("Balance for Account with id {} has been updated", account.getId());
 	}
 
 	private String generateAccountNumber() {

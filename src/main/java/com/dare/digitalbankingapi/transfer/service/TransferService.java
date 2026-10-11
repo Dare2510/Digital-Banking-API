@@ -30,17 +30,13 @@ public class TransferService {
 	private final TransactionService transactionService;
 
 	@Transactional
-	public TransferResponse createTransferBetweenAccounts(
-			TransferRequest transferRequest) {
+	public TransferResponse createTransferBetweenAccounts(TransferRequest transferRequest) {
 
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
-
 		AccountEntity toAccount = accountService.getAccount(transferRequest.getToAccountId());
 
 		BigDecimal transferAmount = transferRequest.getAmount();
-
 		checkBalance(transferAmount, fromAccount.getBalance());
-
 		checkCurrencies(fromAccount, toAccount);
 
 		TransferEntity transfer =
@@ -52,6 +48,7 @@ public class TransferService {
 				);
 
 		transferRepository.saveAndFlush(transfer);
+		log.info("Transfer from account id {} to account id {} has been created", fromAccount, toAccount);
 
 		accountService.updateBalance(fromAccount, transferAmount, TransactionType.TRANSFER_OUT);
 

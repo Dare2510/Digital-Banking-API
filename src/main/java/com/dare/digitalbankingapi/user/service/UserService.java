@@ -45,7 +45,7 @@ public class UserService {
 			);
 
 			userRepository.saveAndFlush(newCustomer);
-
+			log.info("Created User for user {} ", newCustomer.getId());
 			return modelMapper.map(newCustomer, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {
