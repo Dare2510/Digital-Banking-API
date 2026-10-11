@@ -5,10 +5,9 @@ import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/transfers")
@@ -17,9 +16,19 @@ public class TransferController {
 
 	private final TransferService transferService;
 
-	@PostMapping("/transfer")
+	@PostMapping("/")
 	public ResponseEntity<TransferResponse> createTransfer(@RequestBody TransferRequest transferRequest) {
 		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(transferRequest));
+	}
+
+	@GetMapping("/{transferId}")
+	public ResponseEntity<TransferResponse> getTransferDetailsById(@PathVariable Long transferId) {
+		return ResponseEntity.ok(transferService.viewTransferDetails(transferId));
+	}
+
+	@GetMapping("/all/{accountId}")
+	public ResponseEntity<List<TransferResponse>> getTransferDetailsByAccountId(@PathVariable Long accountId) {
+		return ResponseEntity.ok(transferService.findByAccountId(accountId));
 	}
 
 

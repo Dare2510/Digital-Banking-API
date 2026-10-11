@@ -3,6 +3,7 @@ package com.dare.digitalbankingapi.transfer.service;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
@@ -11,6 +12,7 @@ import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.entity.TransferStatus;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
+import com.dare.digitalbankingapi.transfer.exceptions.TransferNotFoundException;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Log4j2
@@ -54,7 +57,7 @@ public class TransferService {
 
 		accountService.updateBalance(toAccount, transferAmount, TransactionType.TRANSFER_IN);
 
-		transactionService.createTransferTransaction(
+		TransactionEntity fromAccountTransaction = transactionService.createTransferTransaction(
 				fromAccount,
 				transferRequest.getReference(),
 				transfer,
@@ -71,8 +74,33 @@ public class TransferService {
 		transfer.setStatus(TransferStatus.COMPLETED);
 		transfer.setUpdatedAt(LocalDateTime.now());
 
-		return buildTransferResponse(transfer, transferRequest);
+		return buildTransferResponse(transfer, fromAccountTransaction);
 	}
+
+	public TransferResponse viewTransferDetails(Long transferId) {
+		TransferEntity transfer = getTransferEntityById(transferId);
+
+		TransactionEntity transaction = transactionService.getTransactionByTransferId(transferId);
+
+		log.info("Getting transfer details for transfer id {}", transferId);
+
+		return buildTransferResponse(transfer,transaction);
+	}
+
+	public List<TransferResponse> findByAccountId(Long accountId) {
+		boolean transferExists = transferRepository.existsByFromAccountId(accountId);
+
+		if(!transferExists) {
+			log.info("Transfer not found for account id {}", accountId);
+			throw new TransferNotFoundException();
+		}
+		return transferRepository.findByFromAccountIdOrderByCreatedAtDesc(accountId).stream()
+				.map(transfer ->
+						buildTransferResponse(transfer,
+								transactionService.getTransactionByTransferId(transfer.getId()))).toList();
+	}
+
+	//Helper Methods
 
 	private void checkBalance(BigDecimal transferAmount, BigDecimal currentBalance) {
 
@@ -97,14 +125,24 @@ public class TransferService {
 		}
 	}
 
-	private TransferResponse buildTransferResponse(TransferEntity transfer, TransferRequest transferRequest) {
+	private TransferResponse buildTransferResponse(TransferEntity transfer, TransactionEntity fromAccount) {
 
 		return TransferResponse.builder()
-				.fromAccountId(transferRequest.getFromAccountId())
-				.toAccountId(transferRequest.getToAccountId())
+				.fromAccountId(transfer.getFromAccount().getId())
+				.toAccountId(transfer.getToAccount().getId())
 				.transferId(transfer.getId())
 				.amount(transfer.getAmount())
-				.reference(transferRequest.getReference())
+				.reference(fromAccount.getReference())
 				.build();
+	}
+
+	private TransferEntity getTransferEntityById(Long transferId) {
+
+		return transferRepository.findById(transferId).orElseThrow(
+				() -> {
+					log.info("Transfer with id {} not found", transferId);
+					return new TransferNotFoundException(transferId);
+				}
+		);
 	}
 }

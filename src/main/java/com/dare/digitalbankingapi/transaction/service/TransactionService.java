@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
+import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
@@ -80,7 +81,7 @@ public class TransactionService {
 		return buildResponse(account, amount);
 	}
 
-	public void createTransferTransaction(AccountEntity account, String reference,
+	public TransactionEntity createTransferTransaction(AccountEntity account, String reference,
 										  TransferEntity transfer, TransactionType transactionType) {
 
 		TransactionEntity transaction =
@@ -95,6 +96,8 @@ public class TransactionService {
 
 		transactionRepository.saveAndFlush(transaction);
 		log.info("Transfer Transaction with {} id has been created", transaction.getId());
+
+		return transaction;
 	}
 
 	private TransactionResponse buildResponse(AccountEntity account, BigDecimal amount) {
@@ -104,5 +107,15 @@ public class TransactionService {
 				.amount(amount)
 				.balanceAfter(account.getBalance())
 				.build();
+	}
+
+	public TransactionEntity getTransactionByTransferId(Long transferId) {
+		return transactionRepository.findFirstByTransferId(transferId)
+				.orElseThrow(
+						() -> {
+							log.info("Transaction for transfer id {} not found", transferId);
+							return new TransactionNotFoundException(transferId);
+						}
+				);
 	}
 }
