@@ -109,8 +109,8 @@ public class AccountService {
 				ownerProfile.getSurname(),
 				account.getAccountNumber(),
 				account.getBalance(),
-				account.getCurrency().toString(),
-				account.getStatus().toString()
+				account.getCurrency(),
+				account.getStatus()
 		);
 	}
 }

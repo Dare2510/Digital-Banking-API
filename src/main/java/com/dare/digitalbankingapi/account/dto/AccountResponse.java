@@ -1,5 +1,7 @@
 package com.dare.digitalbankingapi.account.dto;
 
+import com.dare.digitalbankingapi.account.entity.AccountStatus;
+import com.dare.digitalbankingapi.account.entity.Currency;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +19,7 @@ public class AccountResponse {
 	String surname;
 	String accountNumber;
 	BigDecimal balance;
-	String currency;
-	String status;
+	Currency currency;
+	AccountStatus status;
 
 }
