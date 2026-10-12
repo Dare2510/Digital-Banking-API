@@ -1,6 +1,5 @@
 package com.dare.digitalbankingapi.staff.controller;
 
-import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
