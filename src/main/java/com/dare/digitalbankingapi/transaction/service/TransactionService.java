@@ -30,7 +30,7 @@ public class TransactionService {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
 
-		accountService.checkAccountStatus(account,account.getStatus());
+		accountService.checkAccountStatus(account, account.getStatus());
 
 		BigDecimal amount = request.getAmount();
 
@@ -46,7 +46,7 @@ public class TransactionService {
 				);
 
 		transactionRepository.saveAndFlush(transaction);
-		log.info("Deposit transaction with id {} has been created ",transaction.getId());
+		log.info("Deposit transaction with id {} has been created ", transaction.getId());
 
 		return buildResponse(account, amount);
 	}
@@ -56,7 +56,7 @@ public class TransactionService {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
 
-		accountService.checkAccountStatus(account,account.getStatus());
+		accountService.checkAccountStatus(account, account.getStatus());
 
 		BigDecimal amount = request.getAmount();
 
@@ -80,13 +80,13 @@ public class TransactionService {
 				);
 
 		transactionRepository.saveAndFlush(transaction);
-		log.info("Withdraw transaction with id {} has been created ",transaction.getId());
+		log.info("Withdraw transaction with id {} has been created ", transaction.getId());
 
 		return buildResponse(account, amount);
 	}
 
 	public TransactionEntity createTransferTransaction(AccountEntity account, String reference,
-										  TransferEntity transfer, TransactionType transactionType) {
+													   TransferEntity transfer, TransactionType transactionType) {
 
 		TransactionEntity transaction =
 				new TransactionEntity(

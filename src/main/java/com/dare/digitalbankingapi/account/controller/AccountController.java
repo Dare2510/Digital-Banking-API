@@ -31,7 +31,7 @@ public class AccountController {
 	@GetMapping("/all/{userId}")
 	public ResponseEntity<List<AccountResponse>> findAll(@PathVariable Long userId) {
 
-		return ResponseEntity.ok(accountService.viewAllAccounts(userId));
+		return ResponseEntity.ok(accountService.viewAllAccountsByUser(userId));
 	}
 
 	@GetMapping("/{accountId}")

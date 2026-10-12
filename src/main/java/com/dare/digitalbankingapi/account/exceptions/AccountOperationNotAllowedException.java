@@ -5,6 +5,6 @@ import com.dare.digitalbankingapi.account.entity.AccountStatus;
 public class AccountOperationNotAllowedException extends RuntimeException {
 	public AccountOperationNotAllowedException(Long accountId, AccountStatus status) {
 
-		super("Invalid account status for transaction with id: " + accountId + " and status: " + status);
+		super("Account id " + accountId + " has status " + status + ".Invalid status for operations");
 	}
 }

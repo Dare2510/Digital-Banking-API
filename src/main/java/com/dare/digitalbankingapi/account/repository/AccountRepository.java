@@ -12,5 +12,4 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
 	List<AccountEntity> findByOwner(UserEntity owner);
 
-
 }

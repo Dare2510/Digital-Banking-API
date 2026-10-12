@@ -1,13 +1,18 @@
 package com.dare.digitalbankingapi.staff.controller;
 
+import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
+import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
+import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,12 +20,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class StaffController {
 
 	private final AccountService accountService;
+	private final TransactionService transactionService;
 
-	@PatchMapping("/accounts/{id}/{accountStatus}")
-	public ResponseEntity<Void> updateAccountStatus(@PathVariable Long id, @PathVariable AccountStatus accountStatus){
+	@PatchMapping("/accounts/{accountId}/{accountStatus}")
+	public ResponseEntity<Void> updateAccountStatus(@PathVariable Long accountId, @PathVariable AccountStatus accountStatus) {
 
-		accountService.changeAccountStatus(id, accountStatus);
+		accountService.changeAccountStatus(accountId, accountStatus);
 
 		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping("/accounts/deposits")
+	public ResponseEntity<TransactionResponse> deposit(@RequestBody TransactionRequest depositRequest) {
+		return ResponseEntity.ok(transactionService.deposit(depositRequest));
+	}
+
+	@GetMapping("/accounts")
+	public ResponseEntity<Page<AccountResponse>> getAllAccounts(@PageableDefault(
+			size = 20, sort = "owner", direction = Sort.Direction.ASC) Pageable pageable) {
+
+		return ResponseEntity.ok(accountService.viewAllAccounts(pageable));
 	}
 }

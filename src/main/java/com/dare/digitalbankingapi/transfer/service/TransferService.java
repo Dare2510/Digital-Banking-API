@@ -38,8 +38,8 @@ public class TransferService {
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
 		AccountEntity toAccount = accountService.getAccount(transferRequest.getToAccountId());
 
-		accountService.checkAccountStatus(fromAccount,fromAccount.getStatus());
-		accountService.checkAccountStatus(toAccount,toAccount.getStatus());
+		accountService.checkAccountStatus(fromAccount, fromAccount.getStatus());
+		accountService.checkAccountStatus(toAccount, toAccount.getStatus());
 
 		BigDecimal transferAmount = transferRequest.getAmount();
 		checkBalance(transferAmount, fromAccount.getBalance());
@@ -87,13 +87,13 @@ public class TransferService {
 
 		log.info("Getting transfer details for transfer id {}", transferId);
 
-		return buildTransferResponse(transfer,transaction);
+		return buildTransferResponse(transfer, transaction);
 	}
 
 	public List<TransferResponse> findByAccountId(Long accountId) {
 		boolean transferExists = transferRepository.existsByFromAccountId(accountId);
 
-		if(!transferExists) {
+		if (!transferExists) {
 			log.info("Transfer not found for account id {}", accountId);
 			throw new TransferNotFoundException();
 		}
@@ -108,8 +108,8 @@ public class TransferService {
 	private void checkBalance(BigDecimal transferAmount, BigDecimal currentBalance) {
 
 		boolean enoughBalance = currentBalance
-						.subtract(transferAmount)
-						.compareTo(BigDecimal.ZERO) >= 0;
+				.subtract(transferAmount)
+				.compareTo(BigDecimal.ZERO) >= 0;
 
 		if (!enoughBalance) {
 			log.info("Balance is insufficient");
