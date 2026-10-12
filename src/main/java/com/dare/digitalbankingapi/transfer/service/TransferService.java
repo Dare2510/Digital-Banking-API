@@ -38,6 +38,9 @@ public class TransferService {
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
 		AccountEntity toAccount = accountService.getAccount(transferRequest.getToAccountId());
 
+		accountService.checkAccountStatus(fromAccount,fromAccount.getStatus());
+		accountService.checkAccountStatus(toAccount,toAccount.getStatus());
+
 		BigDecimal transferAmount = transferRequest.getAmount();
 		checkBalance(transferAmount, fromAccount.getBalance());
 		checkCurrencies(fromAccount, toAccount);

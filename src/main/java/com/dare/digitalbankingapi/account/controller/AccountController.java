@@ -20,6 +20,8 @@ public class AccountController {
 	private final AccountService accountService;
 	private final TransactionService transactionService;
 
+	//Customer
+
 	@PostMapping
 	public ResponseEntity<AccountResponse> createAccount(@RequestBody AccountRequest accountRequest) {
 

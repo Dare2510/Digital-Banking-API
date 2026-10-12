@@ -1,6 +1,7 @@
 package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
+import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.transaction.exceptions.InvalidTransactionTypeException;
 import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
@@ -104,6 +105,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(TransactionNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleTransactionNotFoundException(TransactionNotFoundException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(AccountOperationNotAllowedException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidAccountStatusForTransaction(AccountOperationNotAllowedException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 

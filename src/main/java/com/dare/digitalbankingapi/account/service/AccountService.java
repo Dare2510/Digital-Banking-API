@@ -3,9 +3,11 @@ package com.dare.digitalbankingapi.account.service;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
+import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
+import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
@@ -80,6 +82,26 @@ public class AccountService {
 					);
 					return new AccountNotFoundException(accountId);
 				});
+	}
+
+	public void changeAccountStatus(Long accountId, AccountStatus accountStatus) {
+		AccountEntity account = getAccount(accountId);
+
+		account.setStatus(accountStatus);
+		accountRepository.saveAndFlush(account);
+
+	}
+
+	//Helper Methods
+
+	public void checkAccountStatus(AccountEntity account, AccountStatus accountStatus) {
+		boolean statusIsValid =  accountStatus == AccountStatus.ACTIVE || accountStatus == AccountStatus.UNDER_REVIEW;
+
+		if(!statusIsValid) {
+			log.error("The status of account with id {} is not valid for transfers and transactions", account.getId());
+			throw new AccountOperationNotAllowedException(account.getId(), account.getStatus());
+		}
+
 	}
 
 	public void updateBalance(AccountEntity account, BigDecimal amount, TransactionType transactionType) {
