@@ -25,7 +25,7 @@
 
 ### Staff
 
-- `POST /accounts/deposits` — Deposit money into an account
+- `POST staff/accounts/deposits` — Deposit money into an account
 - `GET /staff/users` — View users
 - `GET /staff/accounts` — View all accounts
 - `GET /staff/accounts/{id}` — View account details

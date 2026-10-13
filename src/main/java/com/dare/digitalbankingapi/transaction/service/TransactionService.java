@@ -29,11 +29,8 @@ public class TransactionService {
 	public TransactionResponse deposit(TransactionRequest request) {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
-
-		accountService.checkAccountStatus(account, account.getStatus());
-
 		BigDecimal amount = request.getAmount();
-
+		accountService.checkAccountStatus(account, account.getStatus());
 		accountService.updateBalance(account, amount, TransactionType.DEPOSIT);
 
 		TransactionEntity transaction =

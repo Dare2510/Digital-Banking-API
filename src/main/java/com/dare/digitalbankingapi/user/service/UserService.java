@@ -1,17 +1,23 @@
 package com.dare.digitalbankingapi.user.service;
 
+import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
 import com.dare.digitalbankingapi.user.dto.UserRequest;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
+import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
+import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
+import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final UserProfileRepository userProfileRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final ModelMapper modelMapper;
 
@@ -54,6 +61,16 @@ public class UserService {
 		}
 	}
 
+	public Page<UserDetailsResponse> getPageOfUsersWithDetails(Pageable pageable) {
+		return userRepository.findAll(pageable).
+				map(user -> {
+					log.info("Getting Page of Users with details)");
+					return buildUserDetailResponse(user);
+				});
+	}
+
+	//Helper Methods
+
 	private boolean emailExists(String email) {
 		String trimmedEmail = email.toLowerCase().trim();
 		return userRepository.existsByEmail(trimmedEmail);
@@ -68,5 +85,24 @@ public class UserService {
 						}
 				);
 	}
+
+	private UserDetailsResponse buildUserDetailResponse(UserEntity user) {
+		UserProfileEntity profile = userProfileRepository.findById(user.getId()).orElseThrow(
+				() -> new UserProfileNotFoundException(user.getId()));
+
+		return new UserDetailsResponse(
+				user.getId(),
+				user.getEmail(),
+				user.getRole(),
+				profile.getName(),
+				profile.getSurname(),
+				profile.getStreet(),
+				profile.getHouseNumber(),
+				profile.getCity(),
+				profile.getZipCode(),
+				profile.getCountry()
+		);
+	}
+
 
 }
