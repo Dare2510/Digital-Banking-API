@@ -34,8 +34,10 @@ public class GlobalExceptionHandler {
 		);
 		return new ResponseEntity<>(errorResponse, status);
 	}
+	
+	//Overloaded for SortValidator
 
-	private ResponseEntity<ErrorResponse> errorResponseBuilder(Exception ex, HttpServletRequest request, String message, HttpStatus status) {
+	private ResponseEntity<ErrorResponse> errorResponseBuilder(HttpServletRequest request, String message, HttpStatus status) {
 		ErrorResponse errorResponse = new ErrorResponse(
 				status.value(),
 				message,
@@ -131,7 +133,7 @@ public class GlobalExceptionHandler {
 						+ "'. Allowed fields: "
 						+ String.join(", ", ex.getAllowedFields());
 
-		return errorResponseBuilder(ex, request, message, HttpStatus.BAD_REQUEST);
+		return errorResponseBuilder(request, message, HttpStatus.BAD_REQUEST);
 	}
 
 
