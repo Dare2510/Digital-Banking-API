@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.transaction.service;
 
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
@@ -13,9 +14,12 @@ import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceExcepti
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,16 @@ public class TransactionService {
 
 	private final TransactionRepository transactionRepository;
 	private final AccountService accountService;
+	private final SortValidator sortValidator;
+
+	private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+			"id",
+			"amount",
+			"type",
+			"createdAt",
+			"balanceAfter",
+			"transfer"
+	);
 
 	@Transactional
 	public TransactionResponse deposit(TransactionRequest request) {
@@ -99,6 +113,15 @@ public class TransactionService {
 		log.info("Transfer Transaction with {} id has been created", transaction.getId());
 
 		return transaction;
+	}
+
+	public Page<TransactionResponse> viewAllTransactions(Pageable pageable) {
+		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
+		return transactionRepository.findAll(pageable).map(
+				transaction -> {
+					log.info("Getting page of transactions");
+					return buildResponse(transaction.getAccount(), transaction.getAmount());
+				});
 	}
 
 	//Helper

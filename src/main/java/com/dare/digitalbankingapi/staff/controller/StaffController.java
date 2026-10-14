@@ -6,6 +6,8 @@ import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
+import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
+import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class StaffController {
 
 	private final AccountService accountService;
 	private final TransactionService transactionService;
+	private final TransferService transferService;
 	private final UserService userService;
 
 	//Account Endpoints
@@ -58,5 +61,21 @@ public class StaffController {
 	public ResponseEntity<Page<UserDetailsResponse>> getAllUsersDetails(@PageableDefault(
 			size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(userService.getPageOfUsersWithDetails(pageable));
+	}
+
+	//Transfer Endpoints
+
+	@GetMapping("/transfers")
+	public ResponseEntity<Page<TransferResponse>> getAllTransfers(@PageableDefault(
+			size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
+		return ResponseEntity.ok(transferService.viewAllTransfers(pageable));
+	}
+
+	//Transaction Endpoints
+
+	@GetMapping("/transactions")
+	public ResponseEntity<Page<TransactionResponse>> getAllTransactions(@PageableDefault(
+			size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
+		return ResponseEntity.ok(transactionService.viewAllTransactions(pageable));
 	}
 }

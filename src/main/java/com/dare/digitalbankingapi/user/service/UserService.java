@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.user.service;
 
+import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
 import com.dare.digitalbankingapi.user.dto.UserRequest;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -30,6 +33,13 @@ public class UserService {
 	private final UserProfileRepository userProfileRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final ModelMapper modelMapper;
+	private final SortValidator sortValidator;
+
+	private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+			"id",
+			"email",
+			"role"
+	);
 
 	@Transactional
 	public UserResponse createCostumerUser(UserRequest userRequest) {
@@ -62,6 +72,8 @@ public class UserService {
 	}
 
 	public Page<UserDetailsResponse> getPageOfUsersWithDetails(Pageable pageable) {
+		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
+
 		return userRepository.findAll(pageable).
 				map(user -> {
 					log.info("Getting Page of Users with details)");

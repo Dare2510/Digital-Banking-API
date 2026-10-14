@@ -3,6 +3,7 @@ package com.dare.digitalbankingapi.transfer.service;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.service.AccountService;
+import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
@@ -17,11 +18,14 @@ import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Log4j2
@@ -31,6 +35,16 @@ public class TransferService {
 	private final TransferRepository transferRepository;
 	private final AccountService accountService;
 	private final TransactionService transactionService;
+	private final SortValidator sortValidator;
+
+	private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+			"fromAccount",
+			"toAccount",
+			"currency",
+			"status",
+			"createdAt",
+			"updatedAt"
+	);
 
 	@Transactional
 	public TransferResponse createTransferBetweenAccounts(TransferRequest transferRequest) {
@@ -101,6 +115,17 @@ public class TransferService {
 				.map(transfer ->
 						buildTransferResponse(transfer,
 								transactionService.getTransactionByTransferId(transfer.getId()))).toList();
+	}
+
+	public Page<TransferResponse> viewAllTransfers(Pageable pageable) {
+		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
+
+		return transferRepository.findAll(pageable)
+				.map(transfer -> {
+					log.info("Getting Page of transfer details");
+					return buildTransferResponse(transfer, transactionService.getTransactionByTransferId(transfer.getId()));
+				});
+
 	}
 
 	//Helper Methods

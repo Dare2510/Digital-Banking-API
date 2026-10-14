@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
+import com.dare.digitalbankingapi.common.exceptions.InvalidSortFieldException;
 import com.dare.digitalbankingapi.transaction.exceptions.InvalidTransactionTypeException;
 import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
@@ -28,6 +29,16 @@ public class GlobalExceptionHandler {
 		ErrorResponse errorResponse = new ErrorResponse(
 				status.value(),
 				ex.getMessage(),
+				request.getRequestURI(),
+				LocalDateTime.now()
+		);
+		return new ResponseEntity<>(errorResponse, status);
+	}
+
+	private ResponseEntity<ErrorResponse> errorResponseBuilder(Exception ex, HttpServletRequest request, String message, HttpStatus status) {
+		ErrorResponse errorResponse = new ErrorResponse(
+				status.value(),
+				message,
 				request.getRequestURI(),
 				LocalDateTime.now()
 		);
@@ -110,6 +121,17 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(AccountOperationNotAllowedException.class)
 	public ResponseEntity<ErrorResponse> handleInvalidAccountStatusForTransaction(AccountOperationNotAllowedException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(InvalidSortFieldException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidSortField(InvalidSortFieldException ex, HttpServletRequest request) {
+
+		String message =
+				"Invalid sort field '" + ex.getField()
+						+ "'. Allowed fields: "
+						+ String.join(", ", ex.getAllowedFields());
+
+		return errorResponseBuilder(ex, request, message, HttpStatus.BAD_REQUEST);
 	}
 
 
