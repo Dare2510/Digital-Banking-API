@@ -39,26 +39,26 @@ public class StaffController {
 	}
 
 	@PostMapping("/accounts/deposits")
-	public ResponseEntity<TransactionResponse> deposit(@RequestBody TransactionRequest depositRequest) {
+	public ResponseEntity<TransactionResponse> depositFromAccount(@RequestBody TransactionRequest depositRequest) {
 		return ResponseEntity.ok(transactionService.deposit(depositRequest));
 	}
 
 	@GetMapping("/accounts")
-	public ResponseEntity<Page<AccountResponse>> getAllAccounts(@PageableDefault(
+	public ResponseEntity<Page<AccountResponse>> getPageOfAllAccounts(@PageableDefault(
 			size = 20, sort = "owner", direction = Sort.Direction.ASC) Pageable pageable) {
 
 		return ResponseEntity.ok(accountService.viewAllAccounts(pageable));
 	}
 
 	@GetMapping("/accounts/{accountId}")
-	public ResponseEntity<AccountResponse> getAccountDetails(@PathVariable Long accountId) {
+	public ResponseEntity<AccountResponse> getAccountDetailsForSpecificAccountId(@PathVariable Long accountId) {
 		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
 	}
 
 	//User Endpoints
 
 	@GetMapping("/users")
-	public ResponseEntity<Page<UserDetailsResponse>> getAllUsersDetails(@PageableDefault(
+	public ResponseEntity<Page<UserDetailsResponse>> getPageOfAllUsersWithDetails(@PageableDefault(
 			size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(userService.getPageOfUsersWithDetails(pageable));
 	}
@@ -66,7 +66,7 @@ public class StaffController {
 	//Transfer Endpoints
 
 	@GetMapping("/transfers")
-	public ResponseEntity<Page<TransferResponse>> getAllTransfers(@PageableDefault(
+	public ResponseEntity<Page<TransferResponse>> getPageAllTransfers(@PageableDefault(
 			size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(transferService.viewAllTransfers(pageable));
 	}
@@ -74,7 +74,7 @@ public class StaffController {
 	//Transaction Endpoints
 
 	@GetMapping("/transactions")
-	public ResponseEntity<Page<TransactionResponse>> getAllTransactions(@PageableDefault(
+	public ResponseEntity<Page<TransactionResponse>> getPageAllTransactions(@PageableDefault(
 			size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable) {
 		return ResponseEntity.ok(transactionService.viewAllTransactions(pageable));
 	}

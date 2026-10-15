@@ -1,8 +1,9 @@
 package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
-import com.dare.digitalbankingapi.user.dto.UserRequest;
+import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
@@ -42,33 +43,35 @@ public class UserService {
 	);
 
 	@Transactional
-	public UserResponse createCostumerUser(UserRequest userRequest) {
-		String email = userRequest.getEmail().toLowerCase().trim();
-		String password = userRequest.getPassword();
+	public UserResponse createCostumerUser(CustomerUserRequest customerUserRequest) {
+		validateUserRequest(customerUserRequest);
 
-		boolean emailExists = emailExists(email);
+		String password = customerUserRequest.getPassword();
+		String email = customerUserRequest.getEmail();
+		Role customerRole = Role.CUSTOMER;
 
-		if (emailExists) {
-			log.info("Email {} is already taken", email);
-			throw new EmailNotAvailableException(email);
-		}
+		return createUserAndGiveResponse(email, password, customerRole);
+	}
 
-		try {
+	@Transactional
+	public UserResponse createEmployeeUser(EmployeeUserRequest employeeUserRequest) {
+		validateUserRequest(employeeUserRequest);
 
-			UserEntity newCustomer = new UserEntity(
-					email,
-					passwordEncoder.encode(password),
-					Role.CUSTOMER
-			);
+		String password = employeeUserRequest.getPassword();
+		String email = employeeUserRequest.getEmail();
+		Role staffRole = employeeUserRequest.getRole();
 
-			userRepository.saveAndFlush(newCustomer);
-			log.info("Created User for user {} ", newCustomer.getId());
-			return modelMapper.map(newCustomer, UserResponse.class);
+		return createUserAndGiveResponse(email, password, staffRole);
 
-		} catch (DataIntegrityViolationException ex) {
-			log.info("Could not create user, email {} is already taken", email);
-			throw new EmailNotAvailableException(email);
-		}
+	}
+
+	public UserResponse updateUserRole(Long userId, Role role) {
+		UserEntity userToUpdate = getUserById(userId);
+		userToUpdate.setRole(role);
+
+		userRepository.save(userToUpdate);
+
+		return modelMapper.map(userToUpdate, UserResponse.class);
 	}
 
 	public Page<UserDetailsResponse> getPageOfUsersWithDetails(Pageable pageable) {
@@ -114,6 +117,49 @@ public class UserService {
 				profile.getZipCode(),
 				profile.getCountry()
 		);
+	}
+
+	private void validateUserRequest(CustomerUserRequest customerUserRequest) {
+
+		String email = customerUserRequest.getEmail().toLowerCase().trim();
+
+		boolean emailExists = emailExists(email);
+
+		if (emailExists) {
+			log.info("Email {} is already taken", email);
+			throw new EmailNotAvailableException(email);
+		}
+	}
+
+	private void validateUserRequest(EmployeeUserRequest employeeUserRequest) {
+
+		String email = employeeUserRequest.getEmail().toLowerCase().trim();
+
+		boolean emailExists = emailExists(email);
+
+		if (emailExists) {
+			log.info("Email {} is already taken", email);
+			throw new EmailNotAvailableException(email);
+		}
+	}
+
+	private UserResponse createUserAndGiveResponse(String email, String password, Role role) {
+		try {
+
+			UserEntity user = new UserEntity(
+					email,
+					passwordEncoder.encode(password),
+					role
+			);
+
+			userRepository.saveAndFlush(user);
+			log.info("Created User with id {} and role {}", user.getId(),user.getRole().toString());
+			return modelMapper.map(user, UserResponse.class);
+
+		} catch (DataIntegrityViolationException ex) {
+			log.info("Could not create user with role {} and  email {} is already taken", role, email);
+			throw new EmailNotAvailableException(email);
+		}
 	}
 
 

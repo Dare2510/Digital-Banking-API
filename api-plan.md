@@ -35,7 +35,7 @@
 
 ### Admin
 
-- `POST /admin/staff` — Create staff user
+- `POST /admin/staff` — Create staff/admin user
 - `PATCH /admin/users/{id}/role` — Change user role
 - `PATCH /admin/staff/{id}/status` — Activate/deactivate staff
 - `GET /admin/audit-logs` — View audit log

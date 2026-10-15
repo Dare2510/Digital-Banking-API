@@ -23,25 +23,25 @@ public class AccountController {
 	//Customer
 
 	@PostMapping
-	public ResponseEntity<AccountResponse> createAccount(@RequestBody AccountRequest accountRequest) {
+	public ResponseEntity<AccountResponse> createNewAccount(@RequestBody AccountRequest accountRequest) {
 
 		return ResponseEntity.ok(accountService.createAccount(accountRequest));
 	}
 
 	@GetMapping("/all/{userId}")
-	public ResponseEntity<List<AccountResponse>> findAll(@PathVariable Long userId) {
+	public ResponseEntity<List<AccountResponse>> getAllAccountsByUserId(@PathVariable Long userId) {
 
 		return ResponseEntity.ok(accountService.viewAllAccountsByUser(userId));
 	}
 
 	@GetMapping("/{accountId}")
-	public ResponseEntity<AccountResponse> getAccount(@PathVariable Long accountId) {
+	public ResponseEntity<AccountResponse> getAccountById(@PathVariable Long accountId) {
 
 		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
 	}
 
 	@PatchMapping("/withdraw")
-	public ResponseEntity<TransactionResponse> withdraw(@RequestBody TransactionRequest transactionRequest) {
+	public ResponseEntity<TransactionResponse> withdrawFromAccount(@RequestBody TransactionRequest transactionRequest) {
 
 		return ResponseEntity.ok(transactionService.withdraw(transactionRequest));
 	}

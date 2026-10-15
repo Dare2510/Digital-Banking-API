@@ -17,7 +17,7 @@ public class TransferController {
 	private final TransferService transferService;
 
 	@PostMapping("/")
-	public ResponseEntity<TransferResponse> createTransfer(@RequestBody TransferRequest transferRequest) {
+	public ResponseEntity<TransferResponse> createTransferBetweenAccounts(@RequestBody TransferRequest transferRequest) {
 		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(transferRequest));
 	}
 

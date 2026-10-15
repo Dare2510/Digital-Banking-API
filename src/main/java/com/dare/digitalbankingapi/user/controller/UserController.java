@@ -2,7 +2,7 @@ package com.dare.digitalbankingapi.user.controller;
 
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
-import com.dare.digitalbankingapi.user.dto.UserRequest;
+import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
@@ -22,8 +22,8 @@ public class UserController {
 	private final UserProfileService userProfileService;
 
 	@PostMapping
-	public ResponseEntity<UserResponse> registerUser(@RequestBody UserRequest userRequest) {
-		return ResponseEntity.ok(userService.createCostumerUser(userRequest));
+	public ResponseEntity<UserResponse> registerUser(@RequestBody CustomerUserRequest customerUserRequest) {
+		return ResponseEntity.ok(userService.createCostumerUser(customerUserRequest));
 	}
 
 	@PostMapping("/profile")
