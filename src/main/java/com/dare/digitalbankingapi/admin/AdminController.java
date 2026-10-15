@@ -1,8 +1,11 @@
 package com.dare.digitalbankingapi.admin;
 
 import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
+import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
+import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
+import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +17,20 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
 	private final UserService userService;
+	private final UserProfileService userProfileService;
 
 	@PostMapping("/employee")
 	public ResponseEntity<UserResponse> createEmployeeUser(@RequestBody EmployeeUserRequest employeeUserRequest) {
 		return ResponseEntity.ok(userService.createEmployeeUser(employeeUserRequest));
 	}
 
+	@PostMapping("/employee/profile")
+	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@RequestBody UserProfileRequest userProfileRequest) {
+		return ResponseEntity.ok(userProfileService.createUserProfile(userProfileRequest));
+	}
+
 	@PatchMapping("/users/{userId}/role")
 	public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long userId, @RequestBody Role role) {
-		return ResponseEntity.ok(userService.updateUserRole(userId,role));
+		return ResponseEntity.ok(userService.updateUserRole(userId, role));
 	}
 }

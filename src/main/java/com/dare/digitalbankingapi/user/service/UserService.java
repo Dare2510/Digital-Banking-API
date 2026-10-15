@@ -1,9 +1,9 @@
 package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
-import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
@@ -153,7 +153,7 @@ public class UserService {
 			);
 
 			userRepository.saveAndFlush(user);
-			log.info("Created User with id {} and role {}", user.getId(),user.getRole().toString());
+			log.info("Created User with id {} and role {}", user.getId(), user.getRole().toString());
 			return modelMapper.map(user, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {

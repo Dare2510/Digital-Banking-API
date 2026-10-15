@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.common;
 
+import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.common.exceptions.InvalidSortFieldException;
@@ -90,12 +91,17 @@ public class GlobalExceptionHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
 
+	@ExceptionHandler(AccountClosureFailedException.class)
+	public ResponseEntity<ErrorResponse> handleAccountClosureFailedException(AccountClosureFailedException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
 	//Transfer
 
 
 	@ExceptionHandler(NotEqualCurrencyException.class)
 	public ResponseEntity<ErrorResponse> handleNotEqualCurrencyException(NotEqualCurrencyException ex, HttpServletRequest request) {
-		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
 
 	@ExceptionHandler(InsufficientBalanceException.class)

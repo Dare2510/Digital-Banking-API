@@ -10,7 +10,7 @@
 - `POST /accounts` — Create own account
 - `GET /accounts` — View own accounts
 - `GET /accounts/{id}` — View own account details
-- `PATCH /accounts/{id}/close` — Close/deactivate own account if allowed
+- `PATCH /accounts/{id}/close` — Close own account if balance is zero and account is active
 
 ### Transfers
 

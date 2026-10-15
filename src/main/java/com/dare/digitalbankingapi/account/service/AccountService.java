@@ -4,6 +4,7 @@ import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
+import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
@@ -114,8 +115,24 @@ public class AccountService {
 		AccountEntity account = getAccount(accountId);
 
 		account.setStatus(accountStatus);
+		log.info("Status of Account with id {} has been changed to status {}", accountId, accountStatus);
 		accountRepository.saveAndFlush(account);
 
+	}
+
+	public void closeAccount(Long accountId) {
+		AccountEntity account = getAccount(accountId);
+		boolean balanceIsZero = balanceIsZero(account);
+		boolean accountIsActive = accountIsActive(account);
+
+		if (balanceIsZero && accountIsActive) {
+			log.info("Account with id {} has been set to inactive", accountId);
+			account.setStatus(AccountStatus.INACTIVE);
+			accountRepository.saveAndFlush(account);
+		} else {
+			log.info("Cannot set Account with id {} to inactive", accountId);
+			throw new AccountClosureFailedException(accountId, account.getStatus());
+		}
 	}
 
 	//Helper Methods
@@ -163,5 +180,13 @@ public class AccountService {
 				account.getCurrency(),
 				account.getStatus()
 		);
+	}
+
+	private boolean balanceIsZero(AccountEntity account) {
+		return account.getBalance().compareTo(BigDecimal.ZERO) == 0;
+	}
+
+	private boolean accountIsActive(AccountEntity account) {
+		return account.getStatus() == AccountStatus.ACTIVE;
 	}
 }
