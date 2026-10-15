@@ -17,7 +17,7 @@ public class TransactionController {
 
 	private final TransactionService transactionService;
 
-	@PostMapping("/")
+	@PostMapping
 	public ResponseEntity<TransactionResponse> depositToAccount(@RequestBody TransactionRequest transactionRequest) {
 		return ResponseEntity.ok(transactionService.deposit(transactionRequest));
 	}

@@ -23,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -89,7 +88,6 @@ public class TransferService {
 		);
 
 		transfer.setStatus(TransferStatus.COMPLETED);
-		transfer.setUpdatedAt(LocalDateTime.now());
 
 		return buildTransferResponse(transfer, fromAccountTransaction);
 	}
