@@ -26,10 +26,9 @@ class Transfer{
     Currency currency
     TransferStatus status
     LocalDateTime createdAt
-    LocalDateTime updatedAt
 }
 
-class AccountTransaction {
+class Transaction {
     Long id
     TransactionType type
     BigDecimal amount
@@ -38,7 +37,7 @@ class AccountTransaction {
     LocalDateTime createdAt
 }
 
-class UserInformation{
+class UserProfile{
    String name
    String surname
    String email
@@ -63,10 +62,7 @@ enum AccountStatus{
 
 enum TransferStatus{
     CREATED
-    PENDING
     COMPLETED
-    CANCELLED
-    FAILED
 }
 
 enum TransactionType {

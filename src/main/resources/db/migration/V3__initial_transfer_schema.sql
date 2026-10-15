@@ -11,8 +11,5 @@ CREATE TABLE transfers
     currency        VARCHAR(3)     NOT NULL,
 
     status          VARCHAR(10)    NOT NULL,
-    created_at      TIMESTAMP      NOT NULL,
-    updated_at      TIMESTAMP      NOT NULL
-
-
+    created_at      TIMESTAMP      NOT NULL
 );
