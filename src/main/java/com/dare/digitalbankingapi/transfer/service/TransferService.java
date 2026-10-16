@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
+import com.dare.digitalbankingapi.transaction.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
@@ -41,8 +42,7 @@ public class TransferService {
 			"toAccount",
 			"currency",
 			"status",
-			"createdAt",
-			"updatedAt"
+			"createdAt"
 	);
 
 	@Transactional
@@ -50,6 +50,10 @@ public class TransferService {
 
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
 		AccountEntity toAccount = accountService.getAccount(transferRequest.getToAccountId());
+
+		if (fromAccount.getId().equals(toAccount.getId())) {
+			throw new SameAccountTransferException();
+		}
 
 		accountService.checkAccountStatus(fromAccount, fromAccount.getStatus());
 		accountService.checkAccountStatus(toAccount, toAccount.getStatus());
@@ -103,16 +107,22 @@ public class TransferService {
 	}
 
 	public List<TransferResponse> findByAccountId(Long accountId) {
-		boolean transferExists = transferRepository.existsByFromAccountId(accountId);
 
-		if (!transferExists) {
-			log.info("Transfer not found for account id {}", accountId);
+		List<TransferEntity> transfers = transferRepository.
+				findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
+								accountId,
+								accountId
+						);
+
+		if (transfers.isEmpty()) {
 			throw new TransferNotFoundException();
 		}
-		return transferRepository.findByFromAccountIdOrderByCreatedAtDesc(accountId).stream()
+
+		return transfers.stream()
 				.map(transfer ->
 						buildTransferResponse(transfer,
-								transactionService.getTransactionByTransferId(transfer.getId()))).toList();
+								transactionService.getTransactionByTransferId(transfer.getId())))
+				.toList();
 	}
 
 	public Page<TransferResponse> viewAllTransfers(Pageable pageable) {

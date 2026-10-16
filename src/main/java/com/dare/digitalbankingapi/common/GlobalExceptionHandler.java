@@ -5,6 +5,7 @@ import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.common.exceptions.InvalidSortFieldException;
 import com.dare.digitalbankingapi.transaction.exceptions.InvalidTransactionTypeException;
+import com.dare.digitalbankingapi.transaction.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
@@ -112,6 +113,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(TransferNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleTransferNotFoundException(TransferNotFoundException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(SameAccountTransferException.class)
+	public ResponseEntity<ErrorResponse> handleSameAccountTransferException(SameAccountTransferException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 	//Transaction

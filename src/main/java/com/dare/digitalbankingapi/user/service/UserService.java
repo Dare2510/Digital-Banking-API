@@ -47,7 +47,7 @@ public class UserService {
 		validateUserRequest(customerUserRequest);
 
 		String password = customerUserRequest.getPassword();
-		String email = customerUserRequest.getEmail();
+		String email = customerUserRequest.getEmail().toLowerCase().trim();
 		Role customerRole = Role.CUSTOMER;
 
 		return createUserAndGiveResponse(email, password, customerRole);
@@ -58,7 +58,7 @@ public class UserService {
 		validateUserRequest(employeeUserRequest);
 
 		String password = employeeUserRequest.getPassword();
-		String email = employeeUserRequest.getEmail();
+		String email = employeeUserRequest.getEmail().toLowerCase().trim();
 		Role staffRole = employeeUserRequest.getRole();
 
 		return createUserAndGiveResponse(email, password, staffRole);
@@ -102,7 +102,7 @@ public class UserService {
 	}
 
 	private UserDetailsResponse buildUserDetailResponse(UserEntity user) {
-		UserProfileEntity profile = userProfileRepository.findById(user.getId()).orElseThrow(
+		UserProfileEntity profile = userProfileRepository.findByUserId(user.getId()).orElseThrow(
 				() -> new UserProfileNotFoundException(user.getId()));
 
 		return new UserDetailsResponse(

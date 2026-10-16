@@ -46,7 +46,7 @@ public class StaffController {
 
 	@GetMapping("/accounts")
 	public ResponseEntity<Page<AccountResponse>> getPageOfAllAccounts(@PageableDefault(
-			size = 20, sort = "owner", direction = Sort.Direction.ASC) Pageable pageable) {
+			size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 
 		return ResponseEntity.ok(accountService.viewAllAccounts(pageable));
 	}

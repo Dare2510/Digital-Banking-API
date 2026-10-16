@@ -38,6 +38,7 @@ public class AccountService {
 
 	private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
 			"id",
+			"owner",
 			"accountNumber",
 			"balance",
 			"currency",
@@ -131,7 +132,7 @@ public class AccountService {
 			accountRepository.saveAndFlush(account);
 		} else {
 			log.info("Cannot set Account with id {} to inactive", accountId);
-			throw new AccountClosureFailedException(accountId, account.getStatus());
+			throw new AccountClosureFailedException(accountId, account.getStatus(),account.getBalance());
 		}
 	}
 

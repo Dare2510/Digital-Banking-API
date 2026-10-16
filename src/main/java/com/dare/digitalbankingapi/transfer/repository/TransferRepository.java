@@ -9,7 +9,8 @@ import java.util.List;
 @Repository
 public interface TransferRepository extends JpaRepository<TransferEntity, Long> {
 
-	List<TransferEntity> findByFromAccountIdOrderByCreatedAtDesc(long accountId);
+	List<TransferEntity> findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
+			Long fromAccountId, Long toAccountId);
 
 	boolean existsByFromAccountId(long accountId);
 }

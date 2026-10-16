@@ -119,7 +119,7 @@ public class TransactionService {
 		return transactionRepository.findAll(pageable).map(
 				transaction -> {
 					log.info("Getting page of transactions");
-					return buildResponse(transaction.getAccount(), transaction.getAmount());
+					return buildResponse(transaction.getAccount(), transaction.getBalanceAfter());
 				});
 	}
 
