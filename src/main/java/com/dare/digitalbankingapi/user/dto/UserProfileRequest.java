@@ -12,62 +12,62 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserProfileRequest {
 
-	//temporary
+	// temporary until Security
 	private Long userId;
 
 	@NotBlank(message = "Name is required")
+	@Size(min = 2, max = 50)
 	@Pattern(
-			regexp = "^[a-zA-Z]+$",
-			message = "Name can only contain letters"
+			regexp = "^[\\p{L}\\p{M}]+(?:[ '\\-’][\\p{L}\\p{M}]+)*$",
+			message = "Name contains invalid characters"
 	)
-	@Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
 	private String name;
 
 	@NotBlank(message = "Surname is required")
+	@Size(min = 2, max = 50)
 	@Pattern(
-			regexp = "^[a-zA-Z]+$",
-			message = "Surname can only contain letters"
+			regexp = "^[\\p{L}\\p{M}]+(?:[ '\\-’][\\p{L}\\p{M}]+)*$",
+			message = "Surname contains invalid characters"
 	)
-	@Size(min = 2, max = 50, message = "Surname must be between 2 and 50 characters")
 	private String surname;
 
 	@NotBlank(message = "Street is required")
+	@Size(min = 2, max = 100)
 	@Pattern(
-			regexp = "^[a-zA-Z]+$",
-			message = "Street can only contain letters"
+			regexp = "^[\\p{L}\\p{M}0-9 .,'’/\\-]+$",
+			message = "Street contains invalid characters"
 	)
-	@Size(min = 2, max = 20, message = "Name must be between 2 and 100 characters")
 	private String street;
 
 	@NotBlank(message = "House number is required")
+	@Size(min = 1, max = 10)
 	@Pattern(
 			regexp = "^[0-9]+[A-Za-z]?(?:[-/][0-9A-Za-z]+)?$",
 			message = "Invalid house number"
 	)
-	@Size(min = 1, max = 10, message = "House number must be between 1 and 10 characters")
 	private String houseNumber;
 
 	@NotBlank(message = "City is required")
+	@Size(min = 2, max = 100)
 	@Pattern(
-			regexp = "^[a-zA-Z]+$",
-			message = "City can only contain letters"
+			regexp = "^[\\p{L}\\p{M} .,'’()\\-]+$",
+			message = "City contains invalid characters"
 	)
-	@Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
 	private String city;
 
-	@NotBlank(message = "Zip-Code is required")
+	@NotBlank(message = "Zip code is required")
+	@Size(min = 3, max = 15)
 	@Pattern(
-			regexp = "^[A-Za-z0-9 -]{3,10}$",
+			regexp = "^[A-Za-z0-9][A-Za-z0-9 \\-]{1,13}[A-Za-z0-9]$",
 			message = "Invalid zip code"
 	)
-	@Size(min = 2, max = 15, message = "Name must be between 2 and 15 characters")
 	private String zipCode;
 
 	@NotBlank(message = "Country is required")
+	@Size(min = 2, max = 100)
 	@Pattern(
-			regexp = "^[a-zA-Z]+$",
-			message = "Country can only contain letters"
+			regexp = "^[\\p{L}\\p{M} .,'’()\\-]+$",
+			message = "Country contains invalid characters"
 	)
-	@Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
 	private String country;
 }
