@@ -1,9 +1,7 @@
 package com.dare.digitalbankingapi.user.dto;
 
 import com.dare.digitalbankingapi.user.entity.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,5 +19,11 @@ public class EmployeeUserRequest {
 	@Size(min = 6, max = 72, message = "Password must be between 6 and 72 characters")
 	private String password;
 
+	@NotNull(message = "Role is required")
 	private Role role;
+
+	@AssertTrue(message = "Role must be STAFF or ADMIN")
+	public boolean isEmployeeRoleValid() {
+		return role == null || role == Role.STAFF || role == Role.ADMIN;
+	}
 }

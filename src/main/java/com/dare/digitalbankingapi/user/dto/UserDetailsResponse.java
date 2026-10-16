@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class UserDetailsResponse extends UserProfileResponse {
+public class UserDetailsResponse {
 
 	private Long id;
 	private String email;
