@@ -7,6 +7,7 @@ import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.entity.Role;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,12 @@ public class AdminController {
 	private final UserProfileService userProfileService;
 
 	@PostMapping("/employee")
-	public ResponseEntity<UserResponse> createEmployeeUser(@RequestBody EmployeeUserRequest employeeUserRequest) {
+	public ResponseEntity<UserResponse> createEmployeeUser(@Valid @RequestBody EmployeeUserRequest employeeUserRequest) {
 		return ResponseEntity.ok(userService.createEmployeeUser(employeeUserRequest));
 	}
 
 	@PostMapping("/employee/profile")
-	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@RequestBody UserProfileRequest userProfileRequest) {
+	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@Valid @RequestBody UserProfileRequest userProfileRequest) {
 		return ResponseEntity.ok(userProfileService.createUserProfile(userProfileRequest));
 	}
 

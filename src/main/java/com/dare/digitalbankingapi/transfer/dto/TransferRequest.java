@@ -13,12 +13,15 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class TransferRequest {
 
+	@NotNull
 	@Positive(message = "From Account id must be > 0")
 	private Long fromAccountId;
 
+	@NotNull
 	@Positive(message = "To Account id must be > 0")
 	private Long toAccountId;
 
+	@NotNull
 	@Positive(message = "Amount id must be > 0")
 	private BigDecimal amount;
 

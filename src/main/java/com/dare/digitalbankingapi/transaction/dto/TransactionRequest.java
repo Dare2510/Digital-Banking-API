@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.transaction.dto;
 
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,9 +13,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class TransactionRequest {
 
+	@NotNull
 	@Positive(message = "From Account id must be > 0")
 	private Long accountId;
 
+	@NotNull
 	@Positive(message = "Amount id must be > 0")
 	private BigDecimal amount;
 }

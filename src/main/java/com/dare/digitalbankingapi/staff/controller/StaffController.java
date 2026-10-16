@@ -10,6 +10,7 @@ import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
 import com.dare.digitalbankingapi.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +40,7 @@ public class StaffController {
 	}
 
 	@PostMapping("/accounts/deposits")
-	public ResponseEntity<TransactionResponse> depositFromAccount(@RequestBody TransactionRequest depositRequest) {
+	public ResponseEntity<TransactionResponse> depositFromAccount(@Valid @RequestBody TransactionRequest depositRequest) {
 		return ResponseEntity.ok(transactionService.deposit(depositRequest));
 	}
 

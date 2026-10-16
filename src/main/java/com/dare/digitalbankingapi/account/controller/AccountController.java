@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class AccountController {
 	//Customer
 
 	@PostMapping
-	public ResponseEntity<AccountResponse> createNewAccount(@RequestBody AccountRequest accountRequest) {
+	public ResponseEntity<AccountResponse> createNewAccount(@Valid @RequestBody AccountRequest accountRequest) {
 
 		return ResponseEntity.ok(accountService.createAccount(accountRequest));
 	}

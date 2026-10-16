@@ -66,7 +66,6 @@ public class TransactionService {
 	public TransactionResponse withdraw(TransactionRequest request) {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
-
 		accountService.checkAccountStatus(account, account.getStatus());
 
 		BigDecimal amount = request.getAmount();

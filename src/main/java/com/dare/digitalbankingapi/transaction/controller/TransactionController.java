@@ -3,6 +3,7 @@ package com.dare.digitalbankingapi.transaction.controller;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ public class TransactionController {
 	private final TransactionService transactionService;
 
 	@PostMapping
-	public ResponseEntity<TransactionResponse> depositToAccount(@RequestBody TransactionRequest transactionRequest) {
+	public ResponseEntity<TransactionResponse> depositToAccount(@Valid @RequestBody TransactionRequest transactionRequest) {
 		return ResponseEntity.ok(transactionService.deposit(transactionRequest));
 	}
 

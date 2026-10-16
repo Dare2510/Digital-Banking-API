@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,12 +23,12 @@ public class UserController {
 	private final UserProfileService userProfileService;
 
 	@PostMapping
-	public ResponseEntity<UserResponse> registerUser(@RequestBody CustomerUserRequest customerUserRequest) {
+	public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody CustomerUserRequest customerUserRequest) {
 		return ResponseEntity.ok(userService.createCostumerUser(customerUserRequest));
 	}
 
 	@PostMapping("/profile")
-	public ResponseEntity<UserProfileResponse> createProfile(@RequestBody UserProfileRequest userProfileRequest) {
+	public ResponseEntity<UserProfileResponse> createProfile(@Valid @RequestBody UserProfileRequest userProfileRequest) {
 		return ResponseEntity.ok(userProfileService.createUserProfile(userProfileRequest));
 	}
 }

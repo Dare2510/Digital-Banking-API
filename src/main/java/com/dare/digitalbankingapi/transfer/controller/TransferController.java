@@ -3,6 +3,7 @@ package com.dare.digitalbankingapi.transfer.controller;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class TransferController {
 	private final TransferService transferService;
 
 	@PostMapping("/")
-	public ResponseEntity<TransferResponse> createTransferBetweenAccounts(@RequestBody TransferRequest transferRequest) {
+	public ResponseEntity<TransferResponse> createTransferBetweenAccounts(@Valid @RequestBody TransferRequest transferRequest) {
 		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(transferRequest));
 	}
 
