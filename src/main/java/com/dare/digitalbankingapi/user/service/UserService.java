@@ -1,3 +1,4 @@
+
 package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.common.validation.SortValidator;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.Set;
 
 @Service
@@ -44,10 +46,10 @@ public class UserService {
 
 	@Transactional
 	public UserResponse createCostumerUser(CustomerUserRequest customerUserRequest) {
-		validateUserRequest(customerUserRequest);
+		String email = normalizeEmail(customerUserRequest.getEmail());
+		validateUserRequest(email);
 
 		String password = customerUserRequest.getPassword();
-		String email = customerUserRequest.getEmail().toLowerCase().trim();
 		Role customerRole = Role.CUSTOMER;
 
 		return createUserAndGiveResponse(email, password, customerRole);
@@ -55,14 +57,13 @@ public class UserService {
 
 	@Transactional
 	public UserResponse createEmployeeUser(EmployeeUserRequest employeeUserRequest) {
-		validateUserRequest(employeeUserRequest);
+		String email = normalizeEmail(employeeUserRequest.getEmail());
+		validateUserRequest(email);
 
 		String password = employeeUserRequest.getPassword();
-		String email = employeeUserRequest.getEmail().toLowerCase().trim();
 		Role staffRole = employeeUserRequest.getRole();
 
 		return createUserAndGiveResponse(email, password, staffRole);
-
 	}
 
 	public UserResponse updateUserRole(Long userId, Role role) {
@@ -77,18 +78,24 @@ public class UserService {
 	public Page<UserDetailsResponse> getPageOfUsersWithDetails(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
 
-		return userRepository.findAll(pageable).
-				map(user -> {
+		return userRepository.findAll(pageable)
+				.map(user -> {
 					log.info("Getting Page of Users with details)");
 					return buildUserDetailResponse(user);
 				});
 	}
 
-	//Helper Methods
+	// Helper Methods
 
-	private boolean emailExists(String email) {
-		String trimmedEmail = email.toLowerCase().trim();
-		return userRepository.existsByEmail(trimmedEmail);
+	private String normalizeEmail(String email) {
+		return email.trim().toLowerCase(Locale.ROOT);
+	}
+
+	private void validateUserRequest(String email) {
+		if (userRepository.existsByEmail(email)) {
+			log.info("Email {} is already taken", email);
+			throw new EmailNotAvailableException(email);
+		}
 	}
 
 	public UserEntity getUserById(Long userId) {
@@ -102,8 +109,11 @@ public class UserService {
 	}
 
 	private UserDetailsResponse buildUserDetailResponse(UserEntity user) {
-		UserProfileEntity profile = userProfileRepository.findByUserId(user.getId()).orElseThrow(
-				() -> new UserProfileNotFoundException(user.getId()));
+		UserProfileEntity profile = userProfileRepository
+				.findByUserId(user.getId())
+				.orElseThrow(
+						() -> new UserProfileNotFoundException(user.getId())
+				);
 
 		return new UserDetailsResponse(
 				user.getId(),
@@ -119,33 +129,8 @@ public class UserService {
 		);
 	}
 
-	private void validateUserRequest(CustomerUserRequest customerUserRequest) {
-
-		String email = customerUserRequest.getEmail().toLowerCase().trim();
-
-		boolean emailExists = emailExists(email);
-
-		if (emailExists) {
-			log.info("Email {} is already taken", email);
-			throw new EmailNotAvailableException(email);
-		}
-	}
-
-	private void validateUserRequest(EmployeeUserRequest employeeUserRequest) {
-
-		String email = employeeUserRequest.getEmail().toLowerCase().trim();
-
-		boolean emailExists = emailExists(email);
-
-		if (emailExists) {
-			log.info("Email {} is already taken", email);
-			throw new EmailNotAvailableException(email);
-		}
-	}
-
 	private UserResponse createUserAndGiveResponse(String email, String password, Role role) {
 		try {
-
 			UserEntity user = new UserEntity(
 					email,
 					passwordEncoder.encode(password),
@@ -153,14 +138,16 @@ public class UserService {
 			);
 
 			userRepository.saveAndFlush(user);
-			log.info("Created User with id {} and role {}", user.getId(), user.getRole().toString());
+
+			log.info("Created User with id {} and role {}",
+					user.getId(), user.getRole());
+
 			return modelMapper.map(user, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {
-			log.info("Could not create user with role {} and  email {} is already taken", role, email);
+			log.info("Could not create user with role {} and email {} is already taken",
+					role, email);
 			throw new EmailNotAvailableException(email);
 		}
 	}
-
-
 }
