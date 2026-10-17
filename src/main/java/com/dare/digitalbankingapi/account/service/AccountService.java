@@ -5,6 +5,7 @@ import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
+import com.dare.digitalbankingapi.account.exceptions.AccountInvalidStatusTransitionException;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
@@ -112,14 +113,21 @@ public class AccountService {
 				});
 	}
 
-	public void changeAccountStatus(Long accountId, AccountStatus accountStatus) {
+
+	public void changeAccountStatus(Long accountId, AccountStatus newStatus) {
 		AccountEntity account = getAccount(accountId);
 
-		account.setStatus(accountStatus);
-		log.info("Status of Account with id {} has been changed to status {}", accountId, accountStatus);
+		AccountStatus currentStatus = account.getStatus();
+
+		validStatusTransition(currentStatus, newStatus);
+
+		account.setStatus(newStatus);
 		accountRepository.saveAndFlush(account);
 
+		log.info("Account with id {} status changed from {} to {}",
+				accountId, currentStatus, newStatus);
 	}
+
 
 	public void closeAccount(Long accountId) {
 		AccountEntity account = getAccount(accountId);
@@ -128,7 +136,7 @@ public class AccountService {
 
 		if (balanceIsZero && accountIsActive) {
 			log.info("Account with id {} has been set to inactive", accountId);
-			account.setStatus(AccountStatus.INACTIVE);
+			account.setStatus(AccountStatus.CLOSED);
 			accountRepository.saveAndFlush(account);
 		} else {
 			log.info("Cannot set Account with id {} to inactive", accountId);
@@ -138,10 +146,8 @@ public class AccountService {
 
 	//Helper Methods
 
-	public void checkAccountStatus(AccountEntity account, AccountStatus accountStatus) {
-		boolean statusIsValid = accountStatus == AccountStatus.ACTIVE || accountStatus == AccountStatus.UNDER_REVIEW;
-
-		if (!statusIsValid) {
+	public void checkAccountStatus(AccountEntity account) {
+		if (account.getStatus() != AccountStatus.ACTIVE) {
 			log.error("The status of account with id {} is not valid for transfers and transactions", account.getId());
 			throw new AccountOperationNotAllowedException(account.getId(), account.getStatus());
 		}
@@ -181,6 +187,15 @@ public class AccountService {
 				account.getCurrency(),
 				account.getStatus()
 		);
+	}
+
+	private void validStatusTransition(AccountStatus currentStatus, AccountStatus newStatus) {
+		boolean validTransition = (currentStatus == AccountStatus.ACTIVE && newStatus == AccountStatus.BLOCKED)
+						|| (currentStatus == AccountStatus.BLOCKED && newStatus == AccountStatus.ACTIVE);
+
+		if (!validTransition) {
+			throw new AccountInvalidStatusTransitionException(currentStatus, newStatus);
+		}
 	}
 
 	private boolean balanceIsZero(AccountEntity account) {

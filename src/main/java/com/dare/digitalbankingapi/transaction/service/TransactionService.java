@@ -44,7 +44,7 @@ public class TransactionService {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
 		BigDecimal amount = request.getAmount();
-		accountService.checkAccountStatus(account, account.getStatus());
+		accountService.checkAccountStatus(account);
 		accountService.updateBalance(account, amount, TransactionType.DEPOSIT);
 
 		TransactionEntity transaction =
@@ -66,7 +66,7 @@ public class TransactionService {
 	public TransactionResponse withdraw(TransactionRequest request) {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
-		accountService.checkAccountStatus(account, account.getStatus());
+		accountService.checkAccountStatus(account);
 
 		BigDecimal amount = request.getAmount();
 

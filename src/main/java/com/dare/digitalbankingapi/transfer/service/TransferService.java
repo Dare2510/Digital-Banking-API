@@ -55,8 +55,8 @@ public class TransferService {
 			throw new SameAccountTransferException();
 		}
 
-		accountService.checkAccountStatus(fromAccount, fromAccount.getStatus());
-		accountService.checkAccountStatus(toAccount, toAccount.getStatus());
+		accountService.checkAccountStatus(fromAccount);
+		accountService.checkAccountStatus(toAccount);
 
 		BigDecimal transferAmount = transferRequest.getAmount();
 		checkBalance(transferAmount, fromAccount.getBalance());

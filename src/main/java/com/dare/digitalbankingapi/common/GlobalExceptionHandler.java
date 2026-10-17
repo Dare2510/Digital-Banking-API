@@ -1,6 +1,7 @@
 package com.dare.digitalbankingapi.common;
 
 import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
+import com.dare.digitalbankingapi.account.exceptions.AccountInvalidStatusTransitionException;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.common.exceptions.InvalidSortFieldException;
@@ -95,6 +96,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(AccountClosureFailedException.class)
 	public ResponseEntity<ErrorResponse> handleAccountClosureFailedException(AccountClosureFailedException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(AccountInvalidStatusTransitionException.class)
+	public ResponseEntity<ErrorResponse> handleAccountInvalidStatusTransitionException(AccountInvalidStatusTransitionException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
 
 	//Transfer
