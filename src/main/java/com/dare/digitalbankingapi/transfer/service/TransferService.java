@@ -110,9 +110,9 @@ public class TransferService {
 
 		List<TransferEntity> transfers = transferRepository.
 				findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
-								accountId,
-								accountId
-						);
+						accountId,
+						accountId
+				);
 
 		if (transfers.isEmpty()) {
 			throw new TransferNotFoundException();
@@ -128,11 +128,11 @@ public class TransferService {
 	public Page<TransferResponse> viewAllTransfers(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
 
+		log.debug("Getting Page of transfer details");
+
 		return transferRepository.findAll(pageable)
-				.map(transfer -> {
-					log.info("Getting Page of transfer details");
-					return buildTransferResponse(transfer, transactionService.getTransactionByTransferId(transfer.getId()));
-				});
+				.map(transfer -> buildTransferResponse(
+						transfer, transactionService.getTransactionByTransferId(transfer.getId())));
 
 	}
 

@@ -59,7 +59,7 @@ public class TransactionService {
 		transactionRepository.saveAndFlush(transaction);
 		log.info("Deposit transaction with id {} has been created ", transaction.getId());
 
-		return buildResponse(account, amount);
+		return buildResponse(transaction);
 	}
 
 	@Transactional
@@ -92,7 +92,7 @@ public class TransactionService {
 		transactionRepository.saveAndFlush(transaction);
 		log.info("Withdraw transaction with id {} has been created ", transaction.getId());
 
-		return buildResponse(account, amount);
+		return buildResponse(transaction);
 	}
 
 	public TransactionEntity createTransferTransaction(AccountEntity account, String reference,
@@ -116,21 +116,20 @@ public class TransactionService {
 
 	public Page<TransactionResponse> viewAllTransactions(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
-		return transactionRepository.findAll(pageable).map(
-				transaction -> {
-					log.info("Getting page of transactions");
-					return buildResponse(transaction.getAccount(), transaction.getBalanceAfter());
-				});
+
+		log.debug("Getting page of transactions");
+
+		return transactionRepository.findAll(pageable)
+				.map(this::buildResponse);
 	}
 
 	//Helper
 
-	private TransactionResponse buildResponse(AccountEntity account, BigDecimal amount) {
-
+	private TransactionResponse buildResponse(TransactionEntity transaction) {
 		return TransactionResponse.builder()
-				.fromAccountId(account.getId())
-				.amount(amount)
-				.balanceAfter(account.getBalance())
+				.fromAccountId(transaction.getAccount().getId())
+				.amount(transaction.getAmount())
+				.balanceAfter(transaction.getBalanceAfter())
 				.build();
 	}
 

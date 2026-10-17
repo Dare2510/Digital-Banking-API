@@ -1,4 +1,3 @@
-
 package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.common.validation.SortValidator;
@@ -78,11 +77,9 @@ public class UserService {
 	public Page<UserDetailsResponse> getPageOfUsersWithDetails(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
 
+		log.debug("Getting page of Users with details");
 		return userRepository.findAll(pageable)
-				.map(user -> {
-					log.info("Getting Page of Users with details)");
-					return buildUserDetailResponse(user);
-				});
+				.map(this::buildUserDetailResponse);
 	}
 
 	// Helper Methods

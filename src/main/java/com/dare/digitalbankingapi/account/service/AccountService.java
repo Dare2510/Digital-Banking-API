@@ -94,6 +94,8 @@ public class AccountService {
 	public Page<AccountResponse> viewAllAccounts(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
 
+		log.debug("Getting Page of all accounts");
+
 		return accountRepository.findAll(pageable)
 				.map(account -> {
 					UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
@@ -135,12 +137,12 @@ public class AccountService {
 		boolean accountIsActive = accountIsActive(account);
 
 		if (balanceIsZero && accountIsActive) {
-			log.info("Account with id {} has been set to inactive", accountId);
+			log.info("Account with id {} has been closed", accountId);
 			account.setStatus(AccountStatus.CLOSED);
 			accountRepository.saveAndFlush(account);
 		} else {
-			log.info("Cannot set Account with id {} to inactive", accountId);
-			throw new AccountClosureFailedException(accountId, account.getStatus(),account.getBalance());
+			log.info("Cannot close Account with id {} ", accountId);
+			throw new AccountClosureFailedException(accountId, account.getStatus(), account.getBalance());
 		}
 	}
 
@@ -191,7 +193,7 @@ public class AccountService {
 
 	private void validStatusTransition(AccountStatus currentStatus, AccountStatus newStatus) {
 		boolean validTransition = (currentStatus == AccountStatus.ACTIVE && newStatus == AccountStatus.BLOCKED)
-						|| (currentStatus == AccountStatus.BLOCKED && newStatus == AccountStatus.ACTIVE);
+				|| (currentStatus == AccountStatus.BLOCKED && newStatus == AccountStatus.ACTIVE);
 
 		if (!validTransition) {
 			throw new AccountInvalidStatusTransitionException(currentStatus, newStatus);
