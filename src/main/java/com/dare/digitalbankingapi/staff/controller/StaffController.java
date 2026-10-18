@@ -1,7 +1,7 @@
 package com.dare.digitalbankingapi.staff.controller;
 
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
-import com.dare.digitalbankingapi.account.entity.AccountStatus;
+import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
@@ -31,10 +31,11 @@ public class StaffController {
 
 	//Account Endpoints
 
-	@PatchMapping("/accounts/{accountId}/{accountStatus}")
-	public ResponseEntity<Void> updateAccountStatus(@PathVariable Long accountId, @PathVariable AccountStatus accountStatus) {
+	@PatchMapping("/accounts/{accountId}/status")
+	public ResponseEntity<Void> updateAccountStatus(@PathVariable Long accountId,
+													@RequestBody AccountStatusRequest accountStatusRequest) {
 
-		accountService.changeAccountStatus(accountId, accountStatus);
+		accountService.changeAccountStatus(accountId, accountStatusRequest);
 
 		return ResponseEntity.noContent().build();
 	}

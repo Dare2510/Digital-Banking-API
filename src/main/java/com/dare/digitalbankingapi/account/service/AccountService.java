@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.account.service;
 
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
+import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
@@ -116,14 +117,14 @@ public class AccountService {
 	}
 
 
-	public void changeAccountStatus(Long accountId, AccountStatus newStatus) {
+	public void changeAccountStatus(Long accountId, AccountStatusRequest newStatus) {
 		AccountEntity account = getAccount(accountId);
 
 		AccountStatus currentStatus = account.getStatus();
 
 		validStatusTransition(currentStatus, newStatus);
 
-		account.setStatus(newStatus);
+		account.setStatus(newStatus.getStatus());
 		accountRepository.saveAndFlush(account);
 
 		log.info("Account with id {} status changed from {} to {}",
@@ -191,12 +192,12 @@ public class AccountService {
 		);
 	}
 
-	private void validStatusTransition(AccountStatus currentStatus, AccountStatus newStatus) {
-		boolean validTransition = (currentStatus == AccountStatus.ACTIVE && newStatus == AccountStatus.BLOCKED)
-				|| (currentStatus == AccountStatus.BLOCKED && newStatus == AccountStatus.ACTIVE);
+	private void validStatusTransition(AccountStatus currentStatus, AccountStatusRequest newStatus) {
+		boolean validTransition = (currentStatus == AccountStatus.ACTIVE && newStatus.getStatus() == AccountStatus.BLOCKED)
+				|| (currentStatus == AccountStatus.BLOCKED && newStatus.getStatus() == AccountStatus.ACTIVE);
 
 		if (!validTransition) {
-			throw new AccountInvalidStatusTransitionException(currentStatus, newStatus);
+			throw new AccountInvalidStatusTransitionException(currentStatus, newStatus.getStatus());
 		}
 	}
 

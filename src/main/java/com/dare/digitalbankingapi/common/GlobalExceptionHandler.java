@@ -15,9 +15,11 @@ import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -48,6 +50,16 @@ public class GlobalExceptionHandler {
 				LocalDateTime.now()
 		);
 		return new ResponseEntity<>(errorResponse, status);
+	}
+
+	//Optimistic Locking
+
+	@ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
+	public ResponseEntity<ErrorResponse> handleOptimisticLockException(Exception ex, HttpServletRequest request) {
+		return errorResponseBuilder(
+				request,
+				"Account was modified concurrently. Please retry the operation.",
+				HttpStatus.CONFLICT);
 	}
 
 	//Handle Exceptions
