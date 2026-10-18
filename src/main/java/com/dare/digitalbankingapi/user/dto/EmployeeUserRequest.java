@@ -1,6 +1,6 @@
 package com.dare.digitalbankingapi.user.dto;
 
-import com.dare.digitalbankingapi.user.entity.Role;
+import com.dare.digitalbankingapi.user.entity.UserRole;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,10 +20,10 @@ public class EmployeeUserRequest {
 	private String password;
 
 	@NotNull(message = "Role is required")
-	private Role role;
+	private UserRole userRole;
 
 	@AssertTrue(message = "Role must be STAFF or ADMIN")
 	public boolean isEmployeeRoleValid() {
-		return role == null || role == Role.STAFF || role == Role.ADMIN;
+		return userRole == null || userRole == UserRole.STAFF || userRole == UserRole.ADMIN;
 	}
 }

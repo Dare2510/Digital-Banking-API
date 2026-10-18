@@ -1,3 +1,4 @@
+
 @startuml
 left to right direction
 
@@ -7,50 +8,73 @@ actor "Admin" as admin
 
 admin --|> staff
 
-rectangle "Digital Banking API"{
+rectangle "Digital Banking API" {
 
-    usecase "Register" as UC1
-    usecase "Login" as UC2
-    usecase "Create Account" as UC3
-    usecase "View Own Accounts" as UC4
-    usecase "Withdraw" as UC5
-    usecase "Transfer" as UC6
-    usecase "View Own Transaction History" as UC7
+    package "Customer Features" {
+        usecase "Register" as UC1
+        usecase "Login" as UC2
+        usecase "Complete Profile" as UC3
+        usecase "Create Account" as UC4
+        usecase "View Own Accounts" as UC5
+        usecase "Withdraw Money" as UC6
+        usecase "Transfer Money" as UC7
+        usecase "View Transfers" as UC8
+        usecase "View Own Transaction History" as UC9
+        usecase "Close Account" as UC10
+    }
 
-    usecase "View Users" as UC8
-    usecase "View Accounts" as UC9
-    usecase "View Transactions" as UC10
-    usecase "Block / Unblock Account" as UC11
-    usecase "Deposit Money" as UC12
-    usecase "Cancel Pending Transfer" as UC13
-    usecase "Review Failed Transfer" as UC14
+    package "Staff Features" {
+        usecase "View Users" as UC11
+        usecase "View Accounts" as UC12
+        usecase "View Transfers" as UC13
+        usecase "View Transactions" as UC14
+        usecase "Block / Unblock Account" as UC15
+        usecase "Deposit Money" as UC16
+    }
 
-
-    usecase "Manage Staff" as UC15
-    usecase "Manage Roles" as UC16
-    usecase "View Audit Log" as UC17
-
+    package "Admin Features" {
+        usecase "Create Employee" as UC17
+        usecase "Create Employee Profile" as UC18
+        usecase "Manage User Roles" as UC19
+        usecase "View Audit Log" as UC20
+    }
 }
 
+' Implemented API features
+
 customer --> UC1
-customer --> UC2
 customer --> UC3
 customer --> UC4
 customer --> UC5
 customer --> UC6
 customer --> UC7
+customer --> UC8
+customer --> UC10
 
-staff --> UC2
-staff --> UC8
-staff --> UC9
-staff --> UC10
 staff --> UC11
 staff --> UC12
 staff --> UC13
 staff --> UC14
+staff --> UC15
+staff --> UC16
 
-admin --> UC15
-admin --> UC16
 admin --> UC17
+admin --> UC18
+admin --> UC19
+
+' Planned features
+
+customer ..> UC2
+staff ..> UC2
+customer ..> UC9
+admin ..> UC20
+
+legend bottom
+  Solid line: Implemented API functionality
+  Dashed line: Planned functionality
+
+  Security / JWT authorization is not yet implemented.
+  Customer ownership checks require authentication.
+endlegend
 
 @enduml

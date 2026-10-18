@@ -1,6 +1,6 @@
 package com.dare.digitalbankingapi.user.dto;
 
-import com.dare.digitalbankingapi.user.entity.Role;
+import com.dare.digitalbankingapi.user.entity.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +12,7 @@ public class UserDetailsResponse {
 
 	private Long id;
 	private String email;
-	private Role role;
+	private UserRole userRole;
 	private String name;
 	private String surname;
 	private String street;

@@ -5,7 +5,7 @@ import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
-import com.dare.digitalbankingapi.user.entity.Role;
+import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
@@ -49,9 +49,9 @@ public class UserService {
 		validateUserRequest(email);
 
 		String password = customerUserRequest.getPassword();
-		Role customerRole = Role.CUSTOMER;
+		UserRole customerUserRole = UserRole.CUSTOMER;
 
-		return createUserAndGiveResponse(email, password, customerRole);
+		return createUserAndGiveResponse(email, password, customerUserRole);
 	}
 
 	@Transactional
@@ -60,14 +60,14 @@ public class UserService {
 		validateUserRequest(email);
 
 		String password = employeeUserRequest.getPassword();
-		Role staffRole = employeeUserRequest.getRole();
+		UserRole staffUserRole = employeeUserRequest.getUserRole();
 
-		return createUserAndGiveResponse(email, password, staffRole);
+		return createUserAndGiveResponse(email, password, staffUserRole);
 	}
 
-	public UserResponse updateUserRole(Long userId, Role role) {
+	public UserResponse updateUserRole(Long userId, UserRole userRole) {
 		UserEntity userToUpdate = getUserById(userId);
-		userToUpdate.setRole(role);
+		userToUpdate.setUserRole(userRole);
 
 		userRepository.save(userToUpdate);
 
@@ -115,7 +115,7 @@ public class UserService {
 		return new UserDetailsResponse(
 				user.getId(),
 				user.getEmail(),
-				user.getRole(),
+				user.getUserRole(),
 				profile.getName(),
 				profile.getSurname(),
 				profile.getStreet(),
@@ -126,24 +126,24 @@ public class UserService {
 		);
 	}
 
-	private UserResponse createUserAndGiveResponse(String email, String password, Role role) {
+	private UserResponse createUserAndGiveResponse(String email, String password, UserRole userRole) {
 		try {
 			UserEntity user = new UserEntity(
 					email,
 					passwordEncoder.encode(password),
-					role
+					userRole
 			);
 
 			userRepository.saveAndFlush(user);
 
 			log.info("Created User with id {} and role {}",
-					user.getId(), user.getRole());
+					user.getId(), user.getUserRole());
 
 			return modelMapper.map(user, UserResponse.class);
 
 		} catch (DataIntegrityViolationException ex) {
 			log.info("Could not create user with role {} and email {} is already taken",
-					role, email);
+					userRole, email);
 			throw new EmailNotAvailableException(email);
 		}
 	}

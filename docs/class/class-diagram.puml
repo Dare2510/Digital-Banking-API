@@ -1,26 +1,38 @@
 @startuml
 
-class Account{
+class AccountEntity {
     Long id
     String accountNumber
-    User owner
     BigDecimal balance
     Currency currency
     AccountStatus status
     Long version
     LocalDateTime createdAt
-
 }
 
-class User{
-   Long id
-   UserInformation userInformation
-   String passwordHash
-   UserRole role
-   LocalDateTime createdAt
+class UserEntity {
+    Long id
+    String email
+    String passwordHash
+    UserRole role
+    LocalDateTime createdAt
 }
 
-class Transfer{
+class UserProfileEntity {
+    Long id
+    String name
+    String surname
+    String street
+    String houseNumber
+    String city
+    String zipCode
+    String country
+    ProfileStatus status
+    LocalDateTime createdAt
+    LocalDateTime updatedAt
+}
+
+class TransferEntity {
     Long id
     BigDecimal amount
     Currency currency
@@ -28,7 +40,7 @@ class Transfer{
     LocalDateTime createdAt
 }
 
-class Transaction {
+class TransactionEntity {
     Long id
     TransactionType type
     BigDecimal amount
@@ -37,30 +49,19 @@ class Transaction {
     LocalDateTime createdAt
 }
 
-class UserProfile{
-   String name
-   String surname
-   String email
-   String street
-   String city
-   String zipCode
-   String country
-}
-
-enum Currency{
-    EURO
+enum Currency {
+    EUR
     USD
     JPY
 }
 
-enum AccountStatus{
+enum AccountStatus {
     ACTIVE
-    INACTIVE
-    UNDER_REVIEW
     BLOCKED
+    CLOSED
 }
 
-enum TransferStatus{
+enum TransferStatus {
     CREATED
     COMPLETED
 }
@@ -72,20 +73,24 @@ enum TransactionType {
     TRANSFER_OUT
 }
 
-enum UserRole{
+enum UserRole {
     CUSTOMER
     STAFF
     ADMIN
-
 }
 
-User "1" --> "1" UserInformation
-User "1" --> "*" Account : owns
+enum ProfileStatus {
+    INCOMPLETE
+    COMPLETE
+}
 
-Transfer "*" --> "1" Account : fromAccount
-Transfer "*" --> "1" Account : toAccount
+UserEntity "1" --> "0..1" UserProfileEntity : profile
+UserEntity "1" --> "0..*" AccountEntity : owns
 
-Account "1" --> "*" AccountTransaction
-Transfer "0..1" --> "*" AccountTransaction : creates
+TransferEntity "0..*" --> "1" AccountEntity : fromAccount
+TransferEntity "0..*" --> "1" AccountEntity : toAccount
+
+TransactionEntity "0..*" --> "1" AccountEntity : account
+TransactionEntity "0..*" --> "0..1" TransferEntity : transfer
 
 @enduml

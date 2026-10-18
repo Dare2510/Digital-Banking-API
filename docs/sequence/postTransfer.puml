@@ -1,45 +1,91 @@
+
 @startuml
+
+title Account-to-Account Transfer
 
 actor Customer
 participant TransferController
 participant TransferService
-participant AccountRepository
-participant TransferRepository
-participant AccountTransactionRepository
+participant AccountService
+participant TransactionService
+database AccountRepository
+database TransferRepository
+database TransactionRepository
 
-Customer -> TransferController : POST /transfers
-TransferController -> TransferService : createTransfer(request)
+Customer -> TransferController : POST /api/transfers
+TransferController -> TransferService : createTransferBetweenAccounts(request)
 
 activate TransferService
 
-TransferService -> AccountRepository : findById(fromAccountId)
-AccountRepository --> TransferService : fromAccount
+note over TransferService
+    @Transactional
+    All database changes are atomic.
+end note
 
-TransferService -> AccountRepository : findById(toAccountId)
-AccountRepository --> TransferService : toAccount
+TransferService -> AccountService : getAccount(fromAccountId)
+AccountService -> AccountRepository : findById(fromAccountId)
+AccountRepository --> AccountService : fromAccount
+AccountService --> TransferService : fromAccount
 
-TransferService -> TransferService : validate ownership
-TransferService -> TransferService : validate accounts
-TransferService -> TransferService : validate currency
-TransferService -> TransferService : validate amount
-TransferService -> TransferService : check balance
+TransferService -> AccountService : getAccount(toAccountId)
+AccountService -> AccountRepository : findById(toAccountId)
+AccountRepository --> AccountService : toAccount
+AccountService --> TransferService : toAccount
 
-TransferService -> TransferService : debit(fromAccount)
-TransferService -> TransferService : credit(toAccount)
+TransferService -> TransferService : Check for self-transfer
 
-TransferService -> TransferRepository : save(transfer)
-TransferRepository --> TransferService : savedTransfer
+alt Same account
+    TransferService --> TransferController : SameAccountTransferException
+    TransferController --> Customer : Error response
+else Different accounts
 
-TransferService -> AccountTransactionRepository : save(TRANSFER_OUT)
-AccountTransactionRepository --> TransferService : outgoingTransaction
+    TransferService -> AccountService : checkAccountStatus(fromAccount)
+    TransferService -> AccountService : checkAccountStatus(toAccount)
 
-TransferService -> AccountTransactionRepository : save(TRANSFER_IN)
-AccountTransactionRepository --> TransferService : incomingTransaction
+    TransferService -> TransferService : checkBalance()
+    TransferService -> TransferService : checkCurrencies()
 
-TransferService --> TransferController : TransferResponse
+    note over TransferService
+        Invalid status, insufficient balance
+        or currency mismatch aborts the transfer.
+    end note
+
+    TransferService -> TransferRepository : saveAndFlush(transfer)
+    TransferRepository --> TransferService : TransferEntity (CREATED)
+
+    TransferService -> AccountService : updateBalance(fromAccount, amount, TRANSFER_OUT)
+    AccountService -> AccountRepository : saveAndFlush(fromAccount)
+    AccountRepository --> AccountService : Updated fromAccount
+
+    TransferService -> AccountService : updateBalance(toAccount, amount, TRANSFER_IN)
+    AccountService -> AccountRepository : saveAndFlush(toAccount)
+    AccountRepository --> AccountService : Updated toAccount
+
+    TransferService -> TransactionService : createTransferTransaction(fromAccount, reference, transfer, TRANSFER_OUT)
+    TransactionService -> TransactionRepository : saveAndFlush(outgoingTransaction)
+    TransactionRepository --> TransactionService : TransactionEntity
+    TransactionService --> TransferService : outgoingTransaction
+
+    TransferService -> TransactionService : createTransferTransaction(toAccount, reference, transfer, TRANSFER_IN)
+    TransactionService -> TransactionRepository : saveAndFlush(incomingTransaction)
+    TransactionRepository --> TransactionService : TransactionEntity
+    TransactionService --> TransferService : incomingTransaction
+
+    TransferService -> TransferService : setStatus(COMPLETED)
+    TransferService -> TransferService : buildTransferResponse()
+
+    TransferService --> TransferController : TransferResponse
+    TransferController --> Customer : 200 OK
+
+end
 
 deactivate TransferService
 
-TransferController --> Customer : 201 Created
+note over AccountRepository, TransactionRepository
+    AccountEntity uses @Version for optimistic locking.
+
+    Concurrent update conflicts or other runtime
+    failures cause the transaction to roll back.
+end note
 
 @enduml

@@ -1,32 +1,51 @@
+
 @startuml
 
 actor Staff
-participant DepositController
-participant DepositService
-participant AccountRepository
-participant AccountTransactionRepository
+participant StaffController
+participant TransactionService
+participant AccountService
+database AccountRepository
+database TransactionRepository
 
-Staff -> DepositController : POST /accounts/{id}/deposits
-DepositController -> DepositService : depositMoney(accountId, request)
+Staff -> StaffController : POST /api/staff/accounts/deposits
+StaffController -> TransactionService : deposit(request)
 
-activate DepositService
+activate TransactionService
 
-DepositService -> AccountRepository : findById(accountId)
-AccountRepository --> DepositService : Account
+TransactionService -> AccountService : getAccount(accountId)
+AccountService -> AccountRepository : findById(accountId)
+AccountRepository --> AccountService : AccountEntity
+AccountService --> TransactionService : AccountEntity
 
-DepositService -> DepositService : validateAmount()
-DepositService -> DepositService : validateCurrency()
-DepositService -> DepositService : validateAccountStatus()
+TransactionService -> AccountService : checkAccountStatus(account)
+AccountService --> TransactionService : Account is ACTIVE
 
-DepositService -> DepositService : credit(account)
+TransactionService -> AccountService : updateBalance(account, amount, DEPOSIT)
+AccountService -> AccountRepository : saveAndFlush(account)
+AccountRepository --> AccountService : Updated account
 
-DepositService -> AccountTransactionRepository : save(DEPOSIT)
-AccountTransactionRepository --> DepositService : AccountTransaction
+TransactionService -> TransactionService : Create TransactionEntity
+note right
+    type = DEPOSIT
+    amount = request.amount
+    balanceAfter = account.balance
+end note
 
-DepositService --> DepositController : DepositResponse
+TransactionService -> TransactionRepository : saveAndFlush(transaction)
+TransactionRepository --> TransactionService : TransactionEntity
 
-deactivate DepositService
+TransactionService -> TransactionService : buildResponse(transaction)
+TransactionService --> StaffController : TransactionResponse
 
-DepositController --> Staff : 201 Created
+deactivate TransactionService
+
+StaffController --> Staff : 200 OK
+
+note over TransactionService, TransactionRepository
+    @Transactional
+    Account balance update and ledger entry
+    are committed together or rolled back.
+end note
 
 @enduml

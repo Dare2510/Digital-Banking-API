@@ -33,7 +33,7 @@ public class StaffController {
 
 	@PatchMapping("/accounts/{accountId}/status")
 	public ResponseEntity<Void> updateAccountStatus(@PathVariable Long accountId,
-													@RequestBody AccountStatusRequest accountStatusRequest) {
+													@Valid @RequestBody AccountStatusRequest accountStatusRequest) {
 
 		accountService.changeAccountStatus(accountId, accountStatusRequest);
 

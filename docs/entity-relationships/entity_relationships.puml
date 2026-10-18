@@ -1,22 +1,32 @@
+
 @startchen
 
-entity USER {
+entity USERS {
     id <<key>>
-    name
-    surname
-    email <<Unique>>
+    email <<unique>>
     password_hash
-    street
-    city
-    zip_code
-    country
     role
     created_at
 }
 
+entity USER_PROFILE {
+    id <<key>>
+    user_id <<FK>>
+    name
+    surname
+    street
+    house_number
+    city
+    zip_code
+    country
+    status
+    created_at
+    updated_at
+}
+
 entity ACCOUNT {
     id <<key>>
-    account_number <<Unique>>
+    account_number <<unique>>
     user_id <<FK>>
     balance
     currency
@@ -25,7 +35,7 @@ entity ACCOUNT {
     created_at
 }
 
-entity TRANSFER {
+entity TRANSFERS {
     id <<key>>
     from_account_id <<FK>>
     to_account_id <<FK>>
@@ -33,10 +43,9 @@ entity TRANSFER {
     currency
     status
     created_at
-    updated_at
 }
 
-entity ACCOUNT_TRANSACTION {
+entity TRANSACTION {
     id <<key>>
     account_id <<FK>>
     transfer_id <<FK>>
@@ -45,6 +54,9 @@ entity ACCOUNT_TRANSACTION {
     balance_after
     reference
     created_at
+}
+
+relationship HAS_PROFILE {
 }
 
 relationship OWNS {
@@ -62,19 +74,22 @@ relationship HAS_TRANSACTION {
 relationship RELATED_TRANSFER {
 }
 
-OWNS -(0,N)- USER
+HAS_PROFILE -(1,1)- USER_PROFILE
+HAS_PROFILE -(0,1)- USERS
+
+OWNS -(0,N)- USERS
 OWNS -(1,1)- ACCOUNT
 
-FROM_ACCOUNT -(1,1)- TRANSFER
+FROM_ACCOUNT -(1,1)- TRANSFERS
 FROM_ACCOUNT -(0,N)- ACCOUNT
 
-TO_ACCOUNT -(1,1)- TRANSFER
+TO_ACCOUNT -(1,1)- TRANSFERS
 TO_ACCOUNT -(0,N)- ACCOUNT
 
-HAS_TRANSACTION -(1,1)- ACCOUNT_TRANSACTION
+HAS_TRANSACTION -(1,1)- TRANSACTION
 HAS_TRANSACTION -(0,N)- ACCOUNT
 
-RELATED_TRANSFER -(0,1)- ACCOUNT_TRANSACTION
-RELATED_TRANSFER -(0,N)- TRANSFER
+RELATED_TRANSFER -(0,1)- TRANSACTION
+RELATED_TRANSFER -(0,N)- TRANSFERS
 
 @endchen

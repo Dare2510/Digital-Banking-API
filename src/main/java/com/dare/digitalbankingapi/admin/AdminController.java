@@ -4,7 +4,7 @@ import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
 import com.dare.digitalbankingapi.user.dto.UserResponse;
-import com.dare.digitalbankingapi.user.entity.Role;
+import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class AdminController {
 	}
 
 	@PatchMapping("/users/{userId}/role")
-	public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long userId, @RequestBody Role role) {
-		return ResponseEntity.ok(userService.updateUserRole(userId, role));
+	public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long userId, @RequestBody UserRole userRole) {
+		return ResponseEntity.ok(userService.updateUserRole(userId, userRole));
 	}
 }

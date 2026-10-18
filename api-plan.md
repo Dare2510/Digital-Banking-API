@@ -1,41 +1,59 @@
-## API Plan
 
-### Authentication
+# Digital Banking API — API Plan
 
-- `POST /auth/register` — Register customer
-- `POST /auth/login` — Login and receive JWT
+Base path: `/api`
 
-### Customer / Accounts
+## Authentication / Registration
 
-- `POST /accounts` — Create own account
-- `GET /accounts` — View own accounts
-- `GET /accounts/{id}` — View own account details
-- `PATCH /accounts/{id}/close` — Close own account if balance is zero and account is active
+- POST /auth/register — Register customer
+- POST /auth/register/profile — Complete customer profile
+- POST /auth/login — Login and receive JWT [PLANNED]
 
-### Transfers
+## Customer / Accounts
 
-- `POST /transfers` — Transfer money between accounts
-- `GET /transfers/{id}` — View own transfer details
+- POST /accounts — Create account
+  GET /accounts/all/{userId} — Temporary endpoint; to be replaced after JWT authentication.
+- GET /accounts/{accountId} — Get account details
+- POST /accounts/withdrawals — Withdraw money
+- POST /accounts/{accountId}/close — Close account
 
-### Transactions
+## Transfers
 
-- `GET /transactions` — View own transaction history
-- `GET /transactions/{id}` — View own transaction details
-- `POST /accounts/{id}/withdrawals` — Withdraw money from own account
+- POST /transfers — Create transfer
+- GET /transfers/{transferId} — Get transfer details
+- GET /transfers/all/{accountId} — Get outgoing and incoming transfers
 
-### Staff
+## Staff
 
-- `POST staff/accounts/deposits` — Deposit money into an account
-- `GET /staff/users` — View users
-- `GET /staff/accounts` — View all accounts
-- `GET /staff/accounts/{id}` — View account details
-- `PATCH /staff/accounts/{id}/status` — Block, unblock or mark account for review
-- `GET /staff/transfers` — View transfers
-- `GET /staff/transactions` — View transactions
+- POST /staff/accounts/deposits — Deposit money
+- PATCH /staff/accounts/{accountId}/status — Block or unblock account
+- GET /staff/users — List users (paginated)
+- GET /staff/accounts — List accounts (paginated)
+- GET /staff/accounts/{accountId} — Get account details
+- GET /staff/transfers — List transfers (paginated)
+- GET /staff/transactions — List transactions (paginated)
 
-### Admin
+## Admin
 
-- `POST /admin/staff` — Create staff/admin user
-- `PATCH /admin/users/{id}/role` — Change user role
-- `PATCH /admin/staff/{id}/status` — Activate/deactivate staff
-- `GET /admin/audit-logs` — View audit log
+- POST /admin/employee — Create employee
+- POST /admin/employee/profile — Create employee profile
+- PATCH /admin/users/{userId}/userRole — Change user userRole
+
+## Planned Features
+
+- GET /accounts — Get authenticated user's accounts
+- GET /transactions — Get authenticated user's transactions
+- GET /transactions/{transactionId} — Get transaction details
+- Account ownership validation for customer operations
+- Role-based access control (CUSTOMER, STAFF, ADMIN)
+- Spring Security / JWT authorization
+- Audit logging (optional)
+
+## Account Status Rules
+
+- ACTIVE → BLOCKED: allowed
+- BLOCKED → ACTIVE: allowed
+- ACTIVE → CLOSED: via close-account operation only
+- CLOSED → ACTIVE/BLOCKED: forbidden
+- BLOCKED/CLOSED accounts cannot perform monetary operations
+- Closing an account requires ACTIVE status and zero balance

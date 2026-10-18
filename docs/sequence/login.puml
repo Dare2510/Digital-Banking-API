@@ -1,38 +1,53 @@
+
 @startuml
+
+title Login - JWT Authentication (PLANNED)
 
 actor User
 
 participant AuthController
 participant AuthService
-participant UserRepository
+database UserRepository
 participant PasswordEncoder
 participant JwtService
 
-User -> AuthController : POST /auth/login\n(email, password)
+User -> AuthController : POST /api/auth/login\n(email, password)
 AuthController -> AuthService : login(request)
 
+activate AuthService
+
+AuthService -> AuthService : normalizeEmail(email)
+
 AuthService -> UserRepository : findByEmail(email)
-UserRepository --> AuthService : User / empty
+UserRepository --> AuthService : UserEntity / empty
 
 alt user exists
+
     AuthService -> PasswordEncoder : matches(password, passwordHash)
     PasswordEncoder --> AuthService : true / false
 
     alt password valid
+
         AuthService -> JwtService : generateToken(user)
         JwtService --> AuthService : JWT
 
         AuthService --> AuthController : AuthResponse(JWT)
         AuthController --> User : 200 OK + token
 
-    else password invalid
+    else invalid password
+
         AuthService --> AuthController : InvalidCredentialsException
         AuthController --> User : 401 Unauthorized
+
     end
 
 else user not found
+
     AuthService --> AuthController : InvalidCredentialsException
     AuthController --> User : 401 Unauthorized
+
 end
+
+deactivate AuthService
 
 @enduml

@@ -41,12 +41,12 @@ public class AccountController {
 		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
 	}
 
-	@PostMapping("/withdraw")
-	public ResponseEntity<TransactionResponse> withdrawFromAccount(@RequestBody TransactionRequest transactionRequest) {
+	@PostMapping("/withdrawals")
+	public ResponseEntity<TransactionResponse> withdrawFromAccount(@Valid @RequestBody TransactionRequest transactionRequest) {
 		return ResponseEntity.ok(transactionService.withdraw(transactionRequest));
 	}
 
-	@PatchMapping("/{accountId}/close")
+	@PostMapping("/{accountId}/close")
 	public ResponseEntity<Void> closeAccount(@PathVariable Long accountId) {
 		accountService.closeAccount(accountId);
 		return ResponseEntity.noContent().build();

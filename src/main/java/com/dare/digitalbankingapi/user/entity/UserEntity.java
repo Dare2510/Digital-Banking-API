@@ -30,14 +30,14 @@ public class UserEntity {
 	private String passwordHash;
 
 	@Enumerated(EnumType.STRING)
-	private Role role;
+	private UserRole userRole;
 
 	private LocalDateTime createdAt;
 
-	public UserEntity(String email, String passwordHash, Role role) {
+	public UserEntity(String email, String passwordHash, UserRole userRole) {
 		this.email = email;
 		this.passwordHash = passwordHash;
-		this.role = role;
+		this.userRole = userRole;
 		this.createdAt = LocalDateTime.now();
 	}
 }
