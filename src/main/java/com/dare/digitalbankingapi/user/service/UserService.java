@@ -16,6 +16,7 @@ import com.dare.digitalbankingapi.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.catalina.User;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -103,6 +104,16 @@ public class UserService {
 							return new UserNotFoundException(userId);
 						}
 				);
+	}
+
+	public UserEntity getUserByEmail(String email) {
+		return userRepository.findByEmail(email).orElseThrow(
+				() -> {
+					log.info("User with email {} was not found", email);
+					return new UserNotFoundException(email);
+				}
+		);
+
 	}
 
 	private UserDetailsResponse buildUserDetailResponse(UserEntity user) {
