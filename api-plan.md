@@ -1,4 +1,3 @@
-
 # Digital Banking API — API Plan
 
 Base path: `/api`

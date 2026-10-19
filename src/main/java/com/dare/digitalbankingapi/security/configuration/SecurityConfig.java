@@ -23,19 +23,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 	private final JwTAuthenticationFilter jwtAuthenticationFilter;
-	private final CustomAccessDeniedHandler  customAccessDeniedHandler;
+	private final CustomAccessDeniedHandler customAccessDeniedHandler;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
 	@Bean
-	public SecurityFilterChain springSecurityFilterChain(HttpSecurity http) {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 		http
 				.csrf(AbstractHttpConfigurer::disable)
 				.exceptionHandling(ex -> ex
 						.authenticationEntryPoint(customAuthenticationEntryPoint)
 						.accessDeniedHandler(customAccessDeniedHandler))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST,"/api/auth/login").permitAll()
-						.requestMatchers(HttpMethod.POST,"/api/auth/register").permitAll())
+						.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

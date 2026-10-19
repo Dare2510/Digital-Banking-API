@@ -21,7 +21,7 @@ public class AuthService {
 	public String login(String email, String password) {
 		UserEntity user = userService.getUserByEmail(email);
 
-		boolean passwordMatches = passwordEncoder.matches(password,user.getPasswordHash());
+		boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
 
 		if (!passwordMatches) {
 			log.info("Wrong password input for user with email: {}", email);
@@ -29,7 +29,7 @@ public class AuthService {
 		}
 
 		log.info("Successful login for user with email: {}", email);
-		return jwtUtil.generateToken(email,user.getUserRole(),user.getId());
+		return jwtUtil.generateToken(email, user.getUserRole(), user.getId());
 
 	}
 

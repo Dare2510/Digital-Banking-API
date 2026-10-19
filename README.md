@@ -101,6 +101,6 @@ The `docs/` directory contains:
 
 ## Development Status
 
-The core banking functionality is under development. Authentication, authorization, 
+The core banking functionality is under development. Authentication, authorization,
 and additional integration and concurrency testing
 are planned before the project is considered complete.
