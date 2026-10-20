@@ -22,7 +22,7 @@ public class UserController {
 	private final UserService userService;
 	private final UserProfileService userProfileService;
 
-	@PostMapping("/register")
+	@PostMapping
 	public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody CustomerUserRequest customerUserRequest) {
 		return ResponseEntity.ok(userService.createCostumerUser(customerUserRequest));
 	}

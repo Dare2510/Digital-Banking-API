@@ -35,7 +35,13 @@ public class SecurityConfig {
 						.accessDeniedHandler(customAccessDeniedHandler))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll())
+						.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+						.requestMatchers(
+								"/swagger-ui/**",
+								"/swagger-ui.html",
+								"/v3/api-docs/**",
+								"/swagger-resources/**",
+								"/webjars/**").permitAll().anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
