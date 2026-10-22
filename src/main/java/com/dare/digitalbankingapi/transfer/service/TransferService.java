@@ -2,8 +2,10 @@ package com.dare.digitalbankingapi.transfer.service;
 
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.Currency;
+import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.exceptions.SameAccountTransferException;
@@ -46,9 +48,18 @@ public class TransferService {
 	);
 
 	@Transactional
-	public TransferResponse createTransferBetweenAccounts(TransferRequest transferRequest) {
+	public TransferResponse createTransferBetweenAccounts(AuthenticatedUser authenticatedUser,TransferRequest transferRequest) {
 
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
+
+		boolean userIsOwner = accountService.userIsOwner(fromAccount,authenticatedUser);
+
+		if(!userIsOwner) {
+			log.info("User id {} tried to transfer from another user's account " , authenticatedUser.getUserId());
+			throw new AccountNotFoundException(transferRequest.getFromAccountId());
+		}
+
+
 		AccountEntity toAccount = accountService.getAccount(transferRequest.getToAccountId());
 
 		if (fromAccount.getId().equals(toAccount.getId())) {
@@ -96,8 +107,15 @@ public class TransferService {
 		return buildTransferResponse(transfer, fromAccountTransaction);
 	}
 
-	public TransferResponse viewTransferDetails(Long transferId) {
+	public TransferResponse viewTransferDetails(AuthenticatedUser authenticatedUser,Long transferId) {
 		TransferEntity transfer = getTransferEntityById(transferId);
+
+		boolean userIsOwnerOfTransfer = accountService.userIsOwner(transfer.getFromAccount(),authenticatedUser);
+
+		if(!userIsOwnerOfTransfer) {
+			log.info("User id {} tried to view another user's transfer " , authenticatedUser.getUserId());
+			throw new TransferNotFoundException(transferId);
+		}
 
 		TransactionEntity transaction = transactionService.getTransactionByTransferId(transferId);
 
@@ -106,7 +124,15 @@ public class TransferService {
 		return buildTransferResponse(transfer, transaction);
 	}
 
-	public List<TransferResponse> findByAccountId(Long accountId) {
+	public List<TransferResponse> findByAccountId(AuthenticatedUser authenticatedUser,Long accountId) {
+		AccountEntity account = accountService.getAccount(accountId);
+
+		boolean userIsOwner = accountService.userIsOwner(account,authenticatedUser);
+
+		if(!userIsOwner) {
+			log.info("User id {} tried to view another user's account " , authenticatedUser.getUserId());
+			throw new AccountNotFoundException(accountId);
+		}
 
 		List<TransferEntity> transfers = transferRepository.
 				findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(
