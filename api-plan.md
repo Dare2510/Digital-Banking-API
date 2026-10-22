@@ -4,23 +4,23 @@ Base path: `/api`
 
 ## Authentication / Registration
 
-- POST /auth/register — Register customer
-- POST /auth/register/profile — Complete customer profile
-- POST /auth/login — Login and receive JWT [PLANNED]
+- POST /customer/auth/register — Register customer
+- POST /customer/auth/register/profile — Complete customer profile
+- POST /auth/login — Login and receive JWT
 
 ## Customer / Accounts
 
-- POST /accounts — Create account
-  GET /accounts/all/{userId} — Temporary endpoint; to be replaced after JWT authentication.
-- GET /accounts/{accountId} — Get account details
-- POST /accounts/withdrawals — Withdraw money
-- POST /accounts/{accountId}/close — Close account
+- POST /customer/accounts — Create account
+  GET /customer/accounts/all/{userId} — Temporary endpoint; to be replaced after JWT authentication.
+- GET /customer/accounts/{accountId} — Get account details
+- POST /customer/accounts/withdrawals — Withdraw money
+- POST /customer/accounts/{accountId}/close — Close account
 
 ## Transfers
 
-- POST /transfers — Create transfer
-- GET /transfers/{transferId} — Get transfer details
-- GET /transfers/all/{accountId} — Get outgoing and incoming transfers
+- POST /customer/transfers — Create transfer
+- GET /customer/transfers/{transferId} — Get transfer details
+- GET /customer/transfers/all/{accountId} — Get outgoing and incoming transfers
 
 ## Staff
 

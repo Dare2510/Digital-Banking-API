@@ -41,7 +41,7 @@ public class StaffController {
 	}
 
 	@PostMapping("/accounts/deposits")
-	public ResponseEntity<TransactionResponse> depositFromAccount(@Valid @RequestBody TransactionRequest depositRequest) {
+	public ResponseEntity<TransactionResponse> depositToAccount(@Valid @RequestBody TransactionRequest depositRequest) {
 		return ResponseEntity.ok(transactionService.deposit(depositRequest));
 	}
 

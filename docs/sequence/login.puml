@@ -1,7 +1,7 @@
 
 @startuml
 
-title Login - JWT Authentication (PLANNED)
+title Login - JWT Authentication
 
 actor User
 

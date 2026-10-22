@@ -34,8 +34,13 @@ public class SecurityConfig {
 						.authenticationEntryPoint(customAuthenticationEntryPoint)
 						.accessDeniedHandler(customAccessDeniedHandler))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+
+						.requestMatchers("/api/admin/**").hasRole("ADMIN")
+						.requestMatchers("/api/staff/**").hasRole("STAFF")
+						.requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+
+						.requestMatchers(HttpMethod.POST,"/api/auth/login").permitAll()
+
 						.requestMatchers(
 								"/swagger-ui/**",
 								"/swagger-ui.html",
