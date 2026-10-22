@@ -40,6 +40,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/customer/**").hasRole("CUSTOMER")
 
 						.requestMatchers(HttpMethod.POST,"/api/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST,"/api/cutomer/auth/register/**").permitAll()
 
 						.requestMatchers(
 								"/swagger-ui/**",

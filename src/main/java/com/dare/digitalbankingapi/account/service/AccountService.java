@@ -11,6 +11,7 @@ import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
@@ -68,20 +69,27 @@ public class AccountService {
 		return responseBuilder(ownerProfile, newAccount);
 	}
 
-	public AccountResponse viewAccountDetails(Long accountId) {
+	public AccountResponse viewAccountDetails(AuthenticatedUser authenticatedUser, Long accountId) {
 
 		AccountEntity account = getAccount(accountId);
 
 		UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
 
+		boolean userIsOwner = userIsOwner(account, authenticatedUser);
+
+		if(!userIsOwner) {
+			log.info("User id {} tried to view another user's account " , authenticatedUser.getUserId());
+			throw new AccountNotFoundException(accountId);
+		}
+
 		return responseBuilder(userProfile, account);
 	}
 
-	public List<AccountResponse> viewAllAccountsByUser(Long userId) {
+	public List<AccountResponse> viewAllAccountsByUser(AuthenticatedUser authenticatedUser) {
 
-		UserEntity owner = userService.getUserById(userId);
+		UserEntity owner = userService.getUserById(authenticatedUser.getUserId());
 
-		UserProfileEntity userProfile = userProfileService.getProfileEntity(userId);
+		UserProfileEntity userProfile = userProfileService.getProfileEntity(owner.getId());
 
 		log.info("Viewing all accounts with user id {}", owner.getId());
 
@@ -207,5 +215,9 @@ public class AccountService {
 
 	private boolean accountIsActive(AccountEntity account) {
 		return account.getStatus() == AccountStatus.ACTIVE;
+	}
+
+	private boolean userIsOwner(AccountEntity account, AuthenticatedUser authenticatedUser) {
+		return account.getOwner().getId().equals(authenticatedUser.getUserId());
 	}
 }

@@ -52,10 +52,10 @@ public class StaffController {
 		return ResponseEntity.ok(accountService.viewAllAccounts(pageable));
 	}
 
-	@GetMapping("/accounts/{accountId}")
-	public ResponseEntity<AccountResponse> getAccountDetailsForSpecificAccountId(@PathVariable Long accountId) {
-		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
-	}
+//	@GetMapping("/accounts/{accountId}")
+//	public ResponseEntity<AccountResponse> getAccountDetailsForSpecificAccountId(@PathVariable Long accountId) {
+//		return ResponseEntity.ok(accountService.viewAccountDetails(accountId));
+//	}
 
 	//User Endpoints
 
