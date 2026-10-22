@@ -85,6 +85,17 @@ public class AccountService {
 		return responseBuilder(userProfile, account);
 	}
 
+	//Overloaded version for staff
+
+	public AccountResponse viewAccountDetails(Long accountId) {
+
+		AccountEntity account = getAccount(accountId);
+
+		UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
+
+		return responseBuilder(userProfile, account);
+	}
+
 	public List<AccountResponse> viewAllAccountsByUser(AuthenticatedUser authenticatedUser) {
 
 		UserEntity owner = userService.getUserById(authenticatedUser.getUserId());
