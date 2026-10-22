@@ -1,8 +1,10 @@
 package com.dare.digitalbankingapi.transaction.service;
 
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
+import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
@@ -63,9 +65,17 @@ public class TransactionService {
 	}
 
 	@Transactional
-	public TransactionResponse withdraw(TransactionRequest request) {
+	public TransactionResponse withdraw(AuthenticatedUser authenticatedUser,TransactionRequest request) {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
+
+		boolean userIsOwner = accountService.userIsOwner(account,authenticatedUser);
+
+		if(!userIsOwner) {
+			log.info("User id {} tried to withdraw from another user's account " , authenticatedUser.getUserId());
+			throw new AccountNotFoundException(request.getAccountId());
+		}
+
 		accountService.checkAccountStatus(account);
 
 		BigDecimal amount = request.getAmount();

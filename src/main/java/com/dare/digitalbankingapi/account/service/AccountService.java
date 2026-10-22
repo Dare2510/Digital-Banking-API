@@ -140,10 +140,16 @@ public class AccountService {
 	}
 
 
-	public void closeAccount(Long accountId) {
+	public void closeAccount(AuthenticatedUser authenticatedUser,Long accountId) {
 		AccountEntity account = getAccount(accountId);
 		boolean balanceIsZero = balanceIsZero(account);
 		boolean accountIsActive = accountIsActive(account);
+		boolean userIsOwner = userIsOwner(account, authenticatedUser);
+
+		if(!userIsOwner) {
+			log.info("User id {} tried to close another user's account " , authenticatedUser.getUserId());
+			throw new AccountNotFoundException(accountId);
+		}
 
 		if (balanceIsZero && accountIsActive) {
 			log.info("Account with id {} has been closed", accountId);
@@ -217,7 +223,7 @@ public class AccountService {
 		return account.getStatus() == AccountStatus.ACTIVE;
 	}
 
-	private boolean userIsOwner(AccountEntity account, AuthenticatedUser authenticatedUser) {
+	public boolean userIsOwner(AccountEntity account, AuthenticatedUser authenticatedUser) {
 		return account.getOwner().getId().equals(authenticatedUser.getUserId());
 	}
 }
