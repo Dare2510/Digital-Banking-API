@@ -6,7 +6,7 @@ import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.common.exceptions.InvalidSortFieldException;
 import com.dare.digitalbankingapi.transaction.exceptions.InvalidTransactionTypeException;
-import com.dare.digitalbankingapi.transaction.exceptions.SameAccountTransferException;
+import com.dare.digitalbankingapi.transfer.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
@@ -71,6 +71,19 @@ public class GlobalExceptionHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
+	//Common
+
+	@ExceptionHandler(InvalidSortFieldException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidSortField(InvalidSortFieldException ex, HttpServletRequest request) {
+
+		String message =
+				"Invalid sort field '" + ex.getField()
+						+ "'. Allowed fields: "
+						+ String.join(", ", ex.getAllowedFields());
+
+		return errorResponseBuilder(request, message, HttpStatus.BAD_REQUEST);
+	}
+
 	//User
 
 	@ExceptionHandler(EmailNotAvailableException.class)
@@ -115,6 +128,16 @@ public class GlobalExceptionHandler {
 		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
 
+	@ExceptionHandler(AccountOperationNotAllowedException.class)
+	public ResponseEntity<ErrorResponse> handleAccountOperationNotAllowedException(AccountOperationNotAllowedException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.METHOD_NOT_ALLOWED);
+	}
+
+	@ExceptionHandler(AccountOperationNotAllowedException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidAccountStatusForTransaction(AccountOperationNotAllowedException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+	}
+
 	//Transfer
 
 
@@ -149,22 +172,5 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleTransactionNotFoundException(TransactionNotFoundException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
 	}
-
-	@ExceptionHandler(AccountOperationNotAllowedException.class)
-	public ResponseEntity<ErrorResponse> handleInvalidAccountStatusForTransaction(AccountOperationNotAllowedException ex, HttpServletRequest request) {
-		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
-	}
-
-	@ExceptionHandler(InvalidSortFieldException.class)
-	public ResponseEntity<ErrorResponse> handleInvalidSortField(InvalidSortFieldException ex, HttpServletRequest request) {
-
-		String message =
-				"Invalid sort field '" + ex.getField()
-						+ "'. Allowed fields: "
-						+ String.join(", ", ex.getAllowedFields());
-
-		return errorResponseBuilder(request, message, HttpStatus.BAD_REQUEST);
-	}
-
 
 }

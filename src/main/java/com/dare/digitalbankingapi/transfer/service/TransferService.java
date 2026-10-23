@@ -8,7 +8,7 @@ import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
-import com.dare.digitalbankingapi.transaction.exceptions.SameAccountTransferException;
+import com.dare.digitalbankingapi.transfer.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;

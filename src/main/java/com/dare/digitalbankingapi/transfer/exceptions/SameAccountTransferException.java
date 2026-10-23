@@ -1,4 +1,4 @@
-package com.dare.digitalbankingapi.transaction.exceptions;
+package com.dare.digitalbankingapi.transfer.exceptions;
 
 public class SameAccountTransferException extends RuntimeException {
 
