@@ -11,7 +11,7 @@ Base path: `/api`
 ## Customer / Accounts
 
 - POST /customer/accounts — Create account
-  GET /customer/accounts/all/{userId} — Temporary endpoint; to be replaced after JWT authentication.
+  GET /customer/accounts/all - Get all accounts by user
 - GET /customer/accounts/{accountId} — Get account details
 - POST /customer/accounts/withdrawals — Withdraw money
 - POST /customer/accounts/{accountId}/close — Close account
@@ -35,12 +35,11 @@ Base path: `/api`
 ## Admin
 
 - POST /admin/employee — Create employee
-- POST /admin/employee/profile — Create employee profile
+- POST /admin/employee/{userId}/profile — Create employee profile
 - PATCH /admin/users/{userId}/userRole — Change user userRole
 
 ## Planned Features
 
-- GET /accounts — Get authenticated user's accounts
 - GET /transactions — Get authenticated user's transactions
 - GET /transactions/{transactionId} — Get transaction details
 - Account ownership validation for customer operations

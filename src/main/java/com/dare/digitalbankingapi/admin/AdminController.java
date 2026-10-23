@@ -25,9 +25,9 @@ public class AdminController {
 		return ResponseEntity.ok(userService.createEmployeeUser(employeeUserRequest));
 	}
 
-	@PostMapping("/employee/profile")
-	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@Valid @RequestBody UserProfileRequest userProfileRequest) {
-		return ResponseEntity.ok(userProfileService.createUserProfile(userProfileRequest));
+	@PostMapping("/employee/{userId}/profile")
+	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@PathVariable Long userId, @Valid @RequestBody UserProfileRequest userProfileRequest) {
+		return ResponseEntity.ok(userProfileService.createUserProfile(userId, userProfileRequest));
 	}
 
 	@PatchMapping("/users/{userId}/role")

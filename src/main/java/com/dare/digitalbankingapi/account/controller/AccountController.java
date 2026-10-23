@@ -27,9 +27,10 @@ public class AccountController {
 	//Customer
 
 	@PostMapping
-	public ResponseEntity<AccountResponse> createNewAccount(@Valid @RequestBody AccountRequest accountRequest) {
+	public ResponseEntity<AccountResponse> createNewAccount(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+															@Valid @RequestBody AccountRequest accountRequest) {
 
-		return ResponseEntity.ok(accountService.createAccount(accountRequest));
+		return ResponseEntity.ok(accountService.createAccount(authenticatedUser, accountRequest));
 	}
 
 	@GetMapping("/all")

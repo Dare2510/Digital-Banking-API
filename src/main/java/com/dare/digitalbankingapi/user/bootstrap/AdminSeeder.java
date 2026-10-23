@@ -8,6 +8,7 @@ import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +33,7 @@ public class AdminSeeder implements CommandLineRunner {
 
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String @NonNull ... args) {
 		boolean adminExists = userRepository.existsByUserRole(UserRole.ADMIN);
 
 		if (adminExists) {

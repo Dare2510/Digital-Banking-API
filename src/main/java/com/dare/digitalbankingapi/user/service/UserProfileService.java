@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.user.service;
 
+import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileResponse;
 import com.dare.digitalbankingapi.user.entity.ProfileStatus;
@@ -25,27 +26,19 @@ public class UserProfileService {
 	private final ModelMapper modelMapper;
 
 	@Transactional
-	public UserProfileResponse createUserProfile(UserProfileRequest userProfileRequest) {
+	public UserProfileResponse createUserProfile(AuthenticatedUser authenticatedUser, UserProfileRequest userProfileRequest) {
 
-		UserEntity connectedUser = userService.getUserById(userProfileRequest.getUserId());
+		UserEntity connectedUser = userService.getUserById(authenticatedUser.getUserId());
 
-		boolean profileExists = userProfileRepository.existsByUserId(userProfileRequest.getUserId());
+		boolean profileExists = userProfileRepository.existsByUserId(authenticatedUser.getUserId());
 
 		if (profileExists) {
 			log.info("User Profile for user {} already exists", connectedUser.getId());
 			throw new UserProfileAlreadyExistsException(connectedUser.getId());
 		}
 
-		UserProfileEntity profileEntity = new UserProfileEntity(
-				connectedUser,
-				userProfileRequest.getName(),
-				userProfileRequest.getSurname(),
-				userProfileRequest.getStreet(),
-				userProfileRequest.getHouseNumber(),
-				userProfileRequest.getCity(),
-				userProfileRequest.getZipCode(),
-				userProfileRequest.getCountry()
-		);
+		UserProfileEntity profileEntity = createUserProfileEntity(connectedUser, userProfileRequest);
+
 		try {
 			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
 			log.info("Created User Profile for user {} ", connectedUser.getId());
@@ -61,12 +54,56 @@ public class UserProfileService {
 		}
 	}
 
+	//Overloaded for admin users to create staff/admin profiles
+	@Transactional
+	public UserProfileResponse createUserProfile(Long userId, UserProfileRequest userProfileRequest) {
+
+		UserEntity userForProfileCreation = userService.getUserById(userId);
+
+		boolean profileExists = userProfileRepository.existsByUserId(userId);
+
+		if (profileExists) {
+			log.info("Employee User Profile for user {} already exists", userForProfileCreation.getId());
+			throw new UserProfileAlreadyExistsException(userForProfileCreation.getId());
+		}
+
+		UserProfileEntity profileEntity = createUserProfileEntity(userForProfileCreation, userProfileRequest);
+
+		try {
+			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
+			log.info("Created Employee User Profile for user {} ", userForProfileCreation.getId());
+			savedProfile.setStatus(ProfileStatus.COMPLETE);
+
+			return modelMapper.map(savedProfile, UserProfileResponse.class);
+
+		} catch (DataIntegrityViolationException e) {
+
+			log.warn("Could not create Employee profile for user {}", userForProfileCreation.getId());
+
+			throw new UserProfileAlreadyExistsException(userForProfileCreation.getId());
+		}
+	}
+
 	public UserProfileEntity getProfileEntity(Long userId) {
 		return userProfileRepository.findByUserId(userId).orElseThrow(
 				() -> {
 					log.error("Could not find profile for user {}", userId);
 					return new UserProfileNotFoundException(userId);
 				});
+	}
+
+	private UserProfileEntity createUserProfileEntity(UserEntity user, UserProfileRequest userProfileRequest) {
+		return new UserProfileEntity(
+				user,
+				userProfileRequest.getName(),
+				userProfileRequest.getSurname(),
+				userProfileRequest.getStreet(),
+				userProfileRequest.getHouseNumber(),
+				userProfileRequest.getCity(),
+				userProfileRequest.getZipCode(),
+				userProfileRequest.getCountry()
+		);
+
 	}
 
 

@@ -51,9 +51,9 @@ public class AccountService {
 	);
 
 	@Transactional
-	public AccountResponse createAccount(AccountRequest accountRequest) {
+	public AccountResponse createAccount(AuthenticatedUser authenticatedUser, AccountRequest accountRequest) {
 
-		Long userId = accountRequest.getUserId();
+		Long userId = authenticatedUser.getUserId();
 
 		UserEntity owner = userService.getUserById(userId);
 		UserProfileEntity ownerProfile = userProfileService.getProfileEntity(userId);

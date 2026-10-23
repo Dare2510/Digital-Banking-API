@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -12,9 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserProfileRequest {
 
-	// temporary until Security
-	private Long userId;
-
+	@Schema(example = "Arnold")
 	@NotBlank(message = "Name is required")
 	@Size(min = 2, max = 50)
 	@Pattern(
@@ -23,6 +22,7 @@ public class UserProfileRequest {
 	)
 	private String name;
 
+	@Schema(example = "Alpha")
 	@NotBlank(message = "Surname is required")
 	@Size(min = 2, max = 50)
 	@Pattern(
@@ -31,6 +31,7 @@ public class UserProfileRequest {
 	)
 	private String surname;
 
+	@Schema(example = "Example street")
 	@NotBlank(message = "Street is required")
 	@Size(min = 2, max = 100)
 	@Pattern(
@@ -39,6 +40,7 @@ public class UserProfileRequest {
 	)
 	private String street;
 
+	@Schema(example = "55")
 	@NotBlank(message = "House number is required")
 	@Size(min = 1, max = 10)
 	@Pattern(
@@ -47,6 +49,7 @@ public class UserProfileRequest {
 	)
 	private String houseNumber;
 
+	@Schema(example = "Example city")
 	@NotBlank(message = "City is required")
 	@Size(min = 2, max = 100)
 	@Pattern(
@@ -55,6 +58,7 @@ public class UserProfileRequest {
 	)
 	private String city;
 
+	@Schema(example = "1234567")
 	@NotBlank(message = "Zip code is required")
 	@Size(min = 3, max = 15)
 	@Pattern(
@@ -63,6 +67,7 @@ public class UserProfileRequest {
 	)
 	private String zipCode;
 
+	@Schema(example = "Example country")
 	@NotBlank(message = "Country is required")
 	@Size(min = 2, max = 100)
 	@Pattern(
