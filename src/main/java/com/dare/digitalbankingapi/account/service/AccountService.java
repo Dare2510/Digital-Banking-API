@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.account.service;
 
+import com.dare.digitalbankingapi.account.dto.AccountClosureResponse;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
@@ -73,16 +74,14 @@ public class AccountService {
 
 		AccountEntity account = getAccount(accountId);
 
-		UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
-
 		boolean userIsOwner = userIsOwner(account, authenticatedUser);
 
-		if(!userIsOwner) {
-			log.info("User id {} tried to view another user's account " , authenticatedUser.getUserId());
+		if (!userIsOwner) {
+			log.info("User id {} tried to view another user's account ", authenticatedUser.getUserId());
 			throw new AccountNotFoundException(accountId);
 		}
 
-		return responseBuilder(userProfile, account);
+		return responseBuilder(account);
 	}
 
 	//Overloaded version for staff
@@ -100,14 +99,11 @@ public class AccountService {
 
 		UserEntity owner = userService.getUserById(authenticatedUser.getUserId());
 
-		UserProfileEntity userProfile = userProfileService.getProfileEntity(owner.getId());
-
 		log.info("Viewing all accounts with user id {}", owner.getId());
 
 		return accountRepository.findByOwner(owner)
 				.stream()
-				.map(account ->
-						responseBuilder(userProfile, account))
+				.map(this::responseBuilder)
 				.toList();
 	}
 
@@ -151,14 +147,14 @@ public class AccountService {
 	}
 
 
-	public void closeAccount(AuthenticatedUser authenticatedUser,Long accountId) {
+	public AccountClosureResponse closeAccount(AuthenticatedUser authenticatedUser, Long accountId) {
 		AccountEntity account = getAccount(accountId);
 		boolean balanceIsZero = balanceIsZero(account);
 		boolean accountIsActive = accountIsActive(account);
 		boolean userIsOwner = userIsOwner(account, authenticatedUser);
 
-		if(!userIsOwner) {
-			log.info("User id {} tried to close another user's account " , authenticatedUser.getUserId());
+		if (!userIsOwner) {
+			log.info("User id {} tried to close another user's account ", authenticatedUser.getUserId());
 			throw new AccountNotFoundException(accountId);
 		}
 
@@ -166,10 +162,14 @@ public class AccountService {
 			log.info("Account with id {} has been closed", accountId);
 			account.setStatus(AccountStatus.CLOSED);
 			accountRepository.saveAndFlush(account);
+
+			return new AccountClosureResponse(account.getId(), account.getAccountNumber());
+
 		} else {
 			log.info("Cannot close Account with id {} ", accountId);
 			throw new AccountClosureFailedException(accountId, account.getStatus(), account.getBalance());
 		}
+
 	}
 
 	//Helper Methods
@@ -207,14 +207,29 @@ public class AccountService {
 
 	private AccountResponse responseBuilder(UserProfileEntity ownerProfile, AccountEntity account) {
 
-		return new AccountResponse(
-				ownerProfile.getName(),
-				ownerProfile.getSurname(),
-				account.getAccountNumber(),
-				account.getBalance(),
-				account.getCurrency(),
-				account.getStatus()
-		);
+		return AccountResponse.builder()
+
+				.id(account.getId())
+				.name(ownerProfile.getName())
+				.surname(ownerProfile.getSurname())
+				.accountNumber(account.getAccountNumber())
+				.currency(account.getCurrency())
+				.balance(account.getBalance())
+				.currency(account.getCurrency())
+				.status(account.getStatus())
+				.build();
+	}
+
+	//Overloaded for Customers
+	private AccountResponse responseBuilder(AccountEntity account) {
+
+		return AccountResponse.builder()
+				.id(account.getId())
+				.accountNumber(account.getAccountNumber())
+				.balance(account.getBalance())
+				.currency(account.getCurrency())
+				.status(account.getStatus())
+				.build();
 	}
 
 	private void validStatusTransition(AccountStatus currentStatus, AccountStatusRequest newStatus) {

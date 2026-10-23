@@ -48,14 +48,14 @@ public class TransferService {
 	);
 
 	@Transactional
-	public TransferResponse createTransferBetweenAccounts(AuthenticatedUser authenticatedUser,TransferRequest transferRequest) {
+	public TransferResponse createTransferBetweenAccounts(AuthenticatedUser authenticatedUser, TransferRequest transferRequest) {
 
 		AccountEntity fromAccount = accountService.getAccount(transferRequest.getFromAccountId());
 
-		boolean userIsOwner = accountService.userIsOwner(fromAccount,authenticatedUser);
+		boolean userIsOwner = accountService.userIsOwner(fromAccount, authenticatedUser);
 
-		if(!userIsOwner) {
-			log.info("User id {} tried to transfer from another user's account " , authenticatedUser.getUserId());
+		if (!userIsOwner) {
+			log.info("User id {} tried to transfer from another user's account ", authenticatedUser.getUserId());
 			throw new AccountNotFoundException(transferRequest.getFromAccountId());
 		}
 
@@ -107,13 +107,13 @@ public class TransferService {
 		return buildTransferResponse(transfer, fromAccountTransaction);
 	}
 
-	public TransferResponse viewTransferDetails(AuthenticatedUser authenticatedUser,Long transferId) {
+	public TransferResponse viewTransferDetails(AuthenticatedUser authenticatedUser, Long transferId) {
 		TransferEntity transfer = getTransferEntityById(transferId);
 
-		boolean userIsOwnerOfTransfer = accountService.userIsOwner(transfer.getFromAccount(),authenticatedUser);
+		boolean userIsOwnerOfTransfer = accountService.userIsOwner(transfer.getFromAccount(), authenticatedUser);
 
-		if(!userIsOwnerOfTransfer) {
-			log.info("User id {} tried to view another user's transfer " , authenticatedUser.getUserId());
+		if (!userIsOwnerOfTransfer) {
+			log.info("User id {} tried to view another user's transfer ", authenticatedUser.getUserId());
 			throw new TransferNotFoundException(transferId);
 		}
 
@@ -124,13 +124,13 @@ public class TransferService {
 		return buildTransferResponse(transfer, transaction);
 	}
 
-	public List<TransferResponse> findByAccountId(AuthenticatedUser authenticatedUser,Long accountId) {
+	public List<TransferResponse> findByAccountId(AuthenticatedUser authenticatedUser, Long accountId) {
 		AccountEntity account = accountService.getAccount(accountId);
 
-		boolean userIsOwner = accountService.userIsOwner(account,authenticatedUser);
+		boolean userIsOwner = accountService.userIsOwner(account, authenticatedUser);
 
-		if(!userIsOwner) {
-			log.info("User id {} tried to view another user's account " , authenticatedUser.getUserId());
+		if (!userIsOwner) {
+			log.info("User id {} tried to view another user's account ", authenticatedUser.getUserId());
 			throw new AccountNotFoundException(accountId);
 		}
 

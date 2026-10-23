@@ -16,8 +16,8 @@ public class AccountRequest {
 
 	@NotNull
 	@Positive(message = "User id must be > 0")
-	Long userId;
+	private Long userId;
 
-	Currency currency;
+	private Currency currency;
 
 }

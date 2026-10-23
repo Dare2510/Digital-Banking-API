@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.account.controller;
 
+import com.dare.digitalbankingapi.account.dto.AccountClosureResponse;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.service.AccountService;
@@ -32,7 +33,7 @@ public class AccountController {
 	}
 
 	@GetMapping("/all")
-	public ResponseEntity<List<AccountResponse>> getAllAccountsByUserId(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+	public ResponseEntity<List<AccountResponse>> getAllAccountsAuthenticatedUser(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
 
 		return ResponseEntity.ok(accountService.viewAllAccountsByUser(authenticatedUser));
 	}
@@ -41,19 +42,19 @@ public class AccountController {
 	public ResponseEntity<AccountResponse> getAccountById(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
 														  @PathVariable Long accountId) {
 
-		return ResponseEntity.ok(accountService.viewAccountDetails(authenticatedUser,accountId));
+		return ResponseEntity.ok(accountService.viewAccountDetails(authenticatedUser, accountId));
 	}
 
 	@PostMapping("/withdrawals")
 	public ResponseEntity<TransactionResponse> withdrawFromAccount(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
 																   @Valid @RequestBody TransactionRequest transactionRequest) {
-		return ResponseEntity.ok(transactionService.withdraw(authenticatedUser,transactionRequest));
+		return ResponseEntity.ok(transactionService.withdraw(authenticatedUser, transactionRequest));
 	}
 
 	@PostMapping("/{accountId}/close")
-	public ResponseEntity<Void> closeAccount(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
-											 @PathVariable Long accountId) {
-		accountService.closeAccount(authenticatedUser,accountId);
-		return ResponseEntity.noContent().build();
+	public ResponseEntity<AccountClosureResponse> closeAccount(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+															   @PathVariable Long accountId) {
+		accountService.closeAccount(authenticatedUser, accountId);
+		return ResponseEntity.ok(accountService.closeAccount(authenticatedUser, accountId));
 	}
 }

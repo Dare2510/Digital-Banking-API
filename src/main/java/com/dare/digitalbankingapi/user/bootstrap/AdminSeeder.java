@@ -35,7 +35,7 @@ public class AdminSeeder implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		boolean adminExists = userRepository.existsByUserRole(UserRole.ADMIN);
 
-		if(adminExists) {
+		if (adminExists) {
 			return;
 		}
 
@@ -44,7 +44,6 @@ public class AdminSeeder implements CommandLineRunner {
 		admin.setUserRole(UserRole.ADMIN);
 		admin.setCreatedAt(LocalDateTime.now());
 		admin.setPasswordHash(passwordEncoder.encode(adminPassword));
-
 
 
 		userRepository.saveAndFlush(admin);
@@ -64,7 +63,6 @@ public class AdminSeeder implements CommandLineRunner {
 		userProfileRepository.saveAndFlush(adminProfile);
 
 		log.info("Boot up admin has been created");
-
 
 
 	}

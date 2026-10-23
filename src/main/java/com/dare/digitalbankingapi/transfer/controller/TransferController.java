@@ -22,19 +22,19 @@ public class TransferController {
 	@PostMapping
 	public ResponseEntity<TransferResponse> createTransferBetweenAccounts(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
 																		  @Valid @RequestBody TransferRequest transferRequest) {
-		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(authenticatedUser,transferRequest));
+		return ResponseEntity.ok(transferService.createTransferBetweenAccounts(authenticatedUser, transferRequest));
 	}
 
 	@GetMapping("/{transferId}")
 	public ResponseEntity<TransferResponse> getTransferDetailsById(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
 																   @PathVariable Long transferId) {
-		return ResponseEntity.ok(transferService.viewTransferDetails(authenticatedUser,transferId));
+		return ResponseEntity.ok(transferService.viewTransferDetails(authenticatedUser, transferId));
 	}
 
 	@GetMapping("/all/{accountId}")
 	public ResponseEntity<List<TransferResponse>> getTransferDetailsByAccountId(
-			@AuthenticationPrincipal AuthenticatedUser authenticatedUser,@PathVariable Long accountId) {
-		return ResponseEntity.ok(transferService.findByAccountId(authenticatedUser,accountId));
+			@AuthenticationPrincipal AuthenticatedUser authenticatedUser, @PathVariable Long accountId) {
+		return ResponseEntity.ok(transferService.findByAccountId(authenticatedUser, accountId));
 	}
 
 

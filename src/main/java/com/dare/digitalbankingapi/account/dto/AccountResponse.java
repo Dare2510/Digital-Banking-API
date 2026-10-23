@@ -2,10 +2,7 @@ package com.dare.digitalbankingapi.account.dto;
 
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -13,13 +10,15 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AccountResponse {
 
-	String name;
-	String surname;
-	String accountNumber;
-	BigDecimal balance;
-	Currency currency;
-	AccountStatus status;
+	private Long id;
+	private String name;
+	private String surname;
+	private String accountNumber;
+	private BigDecimal balance;
+	private Currency currency;
+	private AccountStatus status;
 
 }

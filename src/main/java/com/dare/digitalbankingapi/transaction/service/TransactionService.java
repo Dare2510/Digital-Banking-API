@@ -65,14 +65,14 @@ public class TransactionService {
 	}
 
 	@Transactional
-	public TransactionResponse withdraw(AuthenticatedUser authenticatedUser,TransactionRequest request) {
+	public TransactionResponse withdraw(AuthenticatedUser authenticatedUser, TransactionRequest request) {
 
 		AccountEntity account = accountService.getAccount(request.getAccountId());
 
-		boolean userIsOwner = accountService.userIsOwner(account,authenticatedUser);
+		boolean userIsOwner = accountService.userIsOwner(account, authenticatedUser);
 
-		if(!userIsOwner) {
-			log.info("User id {} tried to withdraw from another user's account " , authenticatedUser.getUserId());
+		if (!userIsOwner) {
+			log.info("User id {} tried to withdraw from another user's account ", authenticatedUser.getUserId());
 			throw new AccountNotFoundException(request.getAccountId());
 		}
 

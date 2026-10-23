@@ -1,7 +1,6 @@
 package com.dare.digitalbankingapi.user.service;
 
 import com.dare.digitalbankingapi.common.validation.SortValidator;
-import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserDetailsResponse;
