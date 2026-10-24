@@ -163,6 +163,8 @@ public class TransactionService {
 		TransferEntity transfer = transaction.getTransfer();
 
 		return TransactionResponse.builder()
+				.id(transaction.getId())
+				.createdDate(transaction.getCreatedAt())
 				.fromAccountId(
 						transfer != null
 								? transfer.getFromAccount().getId()
@@ -173,6 +175,7 @@ public class TransactionService {
 								? transfer.getToAccount().getId()
 								: null
 				)
+				.transactionType(transaction.getType())
 				.amount(transaction.getAmount())
 				.reference(transaction.getReference())
 				.balanceAfter(transaction.getBalanceAfter())

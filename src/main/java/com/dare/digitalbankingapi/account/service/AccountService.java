@@ -131,7 +131,7 @@ public class AccountService {
 				});
 	}
 
-
+	@Transactional
 	public void changeAccountStatus(Long accountId, AccountStatusRequest newStatus) {
 		AccountEntity account = getAccount(accountId);
 
@@ -146,7 +146,7 @@ public class AccountService {
 				accountId, currentStatus, newStatus);
 	}
 
-
+	@Transactional
 	public AccountClosureResponse closeAccount(AuthenticatedUser authenticatedUser, Long accountId) {
 		AccountEntity account = getAccount(accountId);
 		boolean balanceIsZero = balanceIsZero(account);
