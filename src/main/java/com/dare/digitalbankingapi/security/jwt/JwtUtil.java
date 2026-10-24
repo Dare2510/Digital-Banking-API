@@ -44,16 +44,6 @@ public class JwtUtil {
 				getSubject();
 	}
 
-	public UserRole extractUserRole(String token) {
-		return UserRole.valueOf(Jwts.parser().
-				verifyWith((SecretKey) getSigningKey()).
-				build().
-				parseSignedClaims(token).
-				getPayload().
-				get("userRole").
-				toString());
-	}
-
 	public Long extractUserId(String token) {
 		return Long.valueOf(Jwts.parser().
 				verifyWith((SecretKey) getSigningKey()).
