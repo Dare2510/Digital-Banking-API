@@ -1,13 +1,14 @@
 package com.dare.digitalbankingapi.user.dto;
 
 import com.dare.digitalbankingapi.user.entity.UserRole;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDetailsResponse {
 
 	private Long id;

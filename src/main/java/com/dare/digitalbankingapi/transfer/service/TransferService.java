@@ -110,7 +110,7 @@ public class TransferService {
 	public TransferResponse viewTransferDetails(AuthenticatedUser authenticatedUser, Long transferId) {
 		TransferEntity transfer = getTransferEntityById(transferId);
 
-		boolean userIsOwnerOfTransfer = accountService.userIsOwner(transfer.getFromAccount(), authenticatedUser);
+		boolean userIsOwnerOfTransfer = userIsOwnerOfTransfer(authenticatedUser, transfer);
 
 		if (!userIsOwnerOfTransfer) {
 			log.info("User id {} tried to view another user's transfer ", authenticatedUser.getUserId());
@@ -206,5 +206,15 @@ public class TransferService {
 					return new TransferNotFoundException(transferId);
 				}
 		);
+	}
+
+	private boolean userIsOwnerOfTransfer(AuthenticatedUser authenticatedUser, TransferEntity transfer) {
+		Long loggedInUserId = authenticatedUser.getUserId();
+		Long fromAccountOwnerId = transfer.getFromAccount().getOwner().getId();
+		Long toAccountOwnerId = transfer.getToAccount().getOwner().getId();
+
+		return fromAccountOwnerId.equals(loggedInUserId) || toAccountOwnerId.equals(loggedInUserId);
+
+
 	}
 }

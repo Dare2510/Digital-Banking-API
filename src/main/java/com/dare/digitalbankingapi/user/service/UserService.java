@@ -117,10 +117,16 @@ public class UserService {
 
 	private UserDetailsResponse buildUserDetailResponse(UserEntity user) {
 		UserProfileEntity profile = userProfileRepository
-				.findByUserId(user.getId())
-				.orElseThrow(
-						() -> new UserProfileNotFoundException(user.getId())
-				);
+				.findByUserId(user.getId()).orElse(null);
+
+		if (profile == null) {
+			return UserDetailsResponse.builder()
+					.id(user.getId())
+					.email(user.getEmail())
+					.userRole(user.getUserRole())
+					.build();
+		}
+
 
 		return new UserDetailsResponse(
 				user.getId(),
