@@ -1,10 +1,8 @@
 package com.dare.digitalbankingapi.account.dto;
 
 import com.dare.digitalbankingapi.account.entity.Currency;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import jakarta.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -12,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AccountRequest {
 
+	@NotNull(message = "Currency is required")
 	private Currency currency;
 
 }

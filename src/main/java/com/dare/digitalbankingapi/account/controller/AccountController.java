@@ -55,7 +55,6 @@ public class AccountController {
 	@PostMapping("/{accountId}/close")
 	public ResponseEntity<AccountClosureResponse> closeAccount(@AuthenticationPrincipal AuthenticatedUser authenticatedUser,
 															   @PathVariable Long accountId) {
-		accountService.closeAccount(authenticatedUser, accountId);
 		return ResponseEntity.ok(accountService.closeAccount(authenticatedUser, accountId));
 	}
 }

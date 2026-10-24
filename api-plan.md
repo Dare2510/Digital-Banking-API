@@ -4,8 +4,8 @@ Base path: `/api`
 
 ## Authentication / Registration
 
-- POST /customer/auth/register — Register customer
-- POST /customer/auth/register/profile — Complete customer profile
+- POST /auth/register — Register customer
+- POST /auth/register/profile — Complete customer profile
 - POST /auth/login — Login and receive JWT
 
 ## Customer / Accounts

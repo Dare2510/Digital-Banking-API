@@ -36,11 +36,11 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")
-						.requestMatchers("/api/staff/**").hasRole("STAFF")
+						.requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
 						.requestMatchers("/api/customer/**").hasRole("CUSTOMER")
 
 						.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/cutomer/auth/register/**").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/register/**").permitAll()
 
 						.requestMatchers(
 								"/swagger-ui/**",

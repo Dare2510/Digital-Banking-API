@@ -1,7 +1,10 @@
 package com.dare.digitalbankingapi.security.jwt;
 
+import com.dare.digitalbankingapi.security.handler.CustomAuthenticationEntryPoint;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
+import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserRole;
+import com.dare.digitalbankingapi.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +28,11 @@ import java.util.List;
 public class JwTAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
+	private final CustomAuthenticationEntryPoint  authenticationEntryPoint;
+	private final UserRepository userRepository;
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request,
+	protected void doFilterInternal(@NonNull HttpServletRequest request,
 									@NonNull HttpServletResponse response,
 									@NonNull FilterChain filterChain)
 			throws ServletException, IOException {
@@ -43,7 +48,17 @@ public class JwTAuthenticationFilter extends OncePerRequestFilter {
 			String token = authHeader.substring(7);
 			String email = jwtUtil.extractEmail(token);
 			Long userId = jwtUtil.extractUserId(token);
-			UserRole role = jwtUtil.extractUserRole(token);
+
+			UserEntity user = userRepository.findById(userId)
+					.orElseThrow(() ->
+							new BadCredentialsException("Invalid JWT token")
+					);
+
+			if (!user.getEmail().equals(email)) {
+				throw new BadCredentialsException("Invalid JWT token");
+			}
+
+			UserRole role = user.getUserRole();
 
 			AuthenticatedUser principal = new AuthenticatedUser(userId, email, role);
 
@@ -56,7 +71,15 @@ public class JwTAuthenticationFilter extends OncePerRequestFilter {
 			SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 		} catch (Exception e) {
 			SecurityContextHolder.clearContext();
-			throw new BadCredentialsException("Bad or invalid JWT token");
+
+			log.debug("JWT authentication failed: {}", e.getClass().getSimpleName());
+
+			authenticationEntryPoint.commence(
+					request,
+					response,
+					new BadCredentialsException("Bad or invalid JWT token", e)
+			);
+			return;
 		}
 
 		filterChain.doFilter(request, response);
