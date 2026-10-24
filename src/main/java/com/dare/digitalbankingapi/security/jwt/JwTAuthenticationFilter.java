@@ -28,7 +28,7 @@ import java.util.List;
 public class JwTAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
-	private final CustomAuthenticationEntryPoint  authenticationEntryPoint;
+	private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 	private final UserRepository userRepository;
 
 	@Override

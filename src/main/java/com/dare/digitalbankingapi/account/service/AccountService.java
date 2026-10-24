@@ -215,7 +215,6 @@ public class AccountService {
 				.accountNumber(account.getAccountNumber())
 				.currency(account.getCurrency())
 				.balance(account.getBalance())
-				.currency(account.getCurrency())
 				.status(account.getStatus())
 				.build();
 	}

@@ -183,7 +183,9 @@ public class TransactionService {
 	}
 
 	public TransactionEntity getTransactionByTransferId(Long transferId) {
-		return transactionRepository.findFirstByTransferId(transferId)
+		return transactionRepository.findByTransferIdAndType(
+						transferId,
+						TransactionType.TRANSFER_OUT)
 				.orElseThrow(
 						() -> {
 							log.info("Transaction for transfer id {} not found", transferId);
@@ -196,7 +198,7 @@ public class TransactionService {
 		return transactionRepository
 				.findByIdAndAccount_Owner_Id(transactionId, authenticatedUser.getUserId())
 				.orElseThrow(() -> {
-					log.info("Transaction with id {} has been found", transactionId);
+					log.info("Transaction with id {} has not been found", transactionId);
 					return new TransactionNotFoundException(transactionId);
 				});
 	}

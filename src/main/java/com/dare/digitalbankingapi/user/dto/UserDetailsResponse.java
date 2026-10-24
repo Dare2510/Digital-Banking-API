@@ -2,7 +2,10 @@ package com.dare.digitalbankingapi.user.dto;
 
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

@@ -1,8 +1,11 @@
 package com.dare.digitalbankingapi.account.dto;
 
 import com.dare.digitalbankingapi.account.entity.Currency;
-import lombok.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

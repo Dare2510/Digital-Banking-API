@@ -140,10 +140,6 @@ public class TransferService {
 						accountId
 				);
 
-		if (transfers.isEmpty()) {
-			throw new TransferNotFoundException();
-		}
-
 		return transfers.stream()
 				.map(transfer ->
 						buildTransferResponse(transfer,

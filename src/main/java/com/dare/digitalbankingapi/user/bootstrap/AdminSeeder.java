@@ -13,8 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -31,21 +34,31 @@ public class AdminSeeder implements CommandLineRunner {
 	@Value("${ADMIN_PASSWORD}")
 	private String adminPassword;
 
-
 	@Override
+	@Transactional
 	public void run(String @NonNull ... args) {
-		boolean adminExists = userRepository.existsByUserRole(UserRole.ADMIN);
 
-		if (adminExists) {
+		String normalizedEmail = adminEmail.trim().toLowerCase(Locale.ROOT);
+
+		Optional<UserEntity> existingAdmin = userRepository.findByEmail(normalizedEmail);
+
+		if (existingAdmin.isPresent()) {
+
+			if (existingAdmin.get().getUserRole() != UserRole.ADMIN) {
+				throw new IllegalStateException(
+						"Bootstrap admin email belongs to a non-admin user"
+				);
+			}
+
+			log.info("Bootstrap admin already exists");
 			return;
 		}
 
 		UserEntity admin = new UserEntity();
-		admin.setEmail(adminEmail);
+		admin.setEmail(normalizedEmail);
 		admin.setUserRole(UserRole.ADMIN);
 		admin.setCreatedAt(LocalDateTime.now());
 		admin.setPasswordHash(passwordEncoder.encode(adminPassword));
-
 
 		userRepository.saveAndFlush(admin);
 
@@ -54,8 +67,8 @@ public class AdminSeeder implements CommandLineRunner {
 		adminProfile.setName("System");
 		adminProfile.setSurname("System_generated");
 		adminProfile.setStreet("System Street");
-		adminProfile.setCity("System City");
 		adminProfile.setHouseNumber("99");
+		adminProfile.setCity("System City");
 		adminProfile.setZipCode("System Zip Code");
 		adminProfile.setCountry("System Country");
 		adminProfile.setCreatedAt(LocalDateTime.now());
@@ -63,8 +76,6 @@ public class AdminSeeder implements CommandLineRunner {
 
 		userProfileRepository.saveAndFlush(adminProfile);
 
-		log.info("Boot up admin has been created");
-
-
+		log.info("Bootstrap admin has been created");
 	}
 }
