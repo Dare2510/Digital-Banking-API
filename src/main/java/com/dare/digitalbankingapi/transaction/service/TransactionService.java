@@ -13,7 +13,6 @@ import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundExce
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
-import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -142,27 +141,15 @@ public class TransactionService {
 
 		List<TransactionEntity> transactions = transactionRepository.findAllByAccount_Owner_Id(userId);
 
-		return transactions.stream().map(transaction -> {
-					TransferEntity transfer = transaction.getTransfer();
-					return TransactionResponse.builder()
-							.fromAccountId(
-									transfer != null
-											? transfer.getFromAccount().getId()
-											: transaction.getAccount().getId()
-							)
-							.toAccountId(
-									transfer != null
-											? transfer.getToAccount().getId()
-											: null
-							)
-							.amount(transaction.getAmount())
-							.reference(transaction.getReference())
-							.balanceAfter(transaction.getBalanceAfter())
-							.build();
-				})
+		return transactions.stream().map(this::buildTransactionResponseWithDetails)
 				.toList();
 	}
 
+	public TransactionResponse findTransactionDetailsById(AuthenticatedUser authenticatedUser, Long transactionId) {
+		TransactionEntity transaction = getTransactionById(transactionId, authenticatedUser);
+		return buildTransactionResponseWithDetails(transaction);
+
+	}
 
 	//Helper
 
@@ -170,6 +157,26 @@ public class TransactionService {
 		return TransactionResponse.builder()
 				.fromAccountId(transaction.getAccount().getId())
 				.amount(transaction.getAmount())
+				.balanceAfter(transaction.getBalanceAfter())
+				.build();
+	}
+
+	private TransactionResponse buildTransactionResponseWithDetails(TransactionEntity transaction) {
+		TransferEntity transfer = transaction.getTransfer();
+
+		return TransactionResponse.builder()
+				.fromAccountId(
+						transfer != null
+								? transfer.getFromAccount().getId()
+								: transaction.getAccount().getId()
+				)
+				.toAccountId(
+						transfer != null
+								? transfer.getToAccount().getId()
+								: null
+				)
+				.amount(transaction.getAmount())
+				.reference(transaction.getReference())
 				.balanceAfter(transaction.getBalanceAfter())
 				.build();
 	}
@@ -182,5 +189,14 @@ public class TransactionService {
 							return new TransactionNotFoundException(transferId);
 						}
 				);
+	}
+
+	public TransactionEntity getTransactionById(Long transactionId, AuthenticatedUser authenticatedUser) {
+		return transactionRepository
+				.findByIdAndAccount_Owner_Id(transactionId, authenticatedUser.getUserId())
+				.orElseThrow(() -> {
+					log.info("Transaction with id {} has been found", transactionId);
+					return new TransactionNotFoundException(transactionId);
+				});
 	}
 }
