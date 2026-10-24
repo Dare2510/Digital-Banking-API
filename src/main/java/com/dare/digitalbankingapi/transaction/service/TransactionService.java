@@ -42,7 +42,6 @@ public class TransactionService {
 			"balanceAfter",
 			"transfer"
 	);
-	private final UserService userService;
 
 	@Transactional
 	public TransactionResponse deposit(TransactionRequest request) {
