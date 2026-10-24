@@ -10,7 +10,6 @@ import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
-import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
