@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
 	//Optimistic Locking
 
 	@ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
-	public ResponseEntity<ErrorResponse> handleOptimisticLockException(Exception ex, HttpServletRequest request) {
+	public ResponseEntity<ErrorResponse> handleOptimisticLockException(HttpServletRequest request) {
 		return errorResponseBuilder(
 				request,
 				"Account was modified concurrently. Please retry the operation.",
@@ -131,11 +131,6 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(AccountOperationNotAllowedException.class)
 	public ResponseEntity<ErrorResponse> handleAccountOperationNotAllowedException(AccountOperationNotAllowedException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.METHOD_NOT_ALLOWED);
-	}
-
-	@ExceptionHandler(AccountOperationNotAllowedException.class)
-	public ResponseEntity<ErrorResponse> handleInvalidAccountStatusForTransaction(AccountOperationNotAllowedException ex, HttpServletRequest request) {
-		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
 	}
 
 	//Transfer

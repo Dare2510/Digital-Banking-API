@@ -232,6 +232,10 @@ public class AccountService {
 				.build();
 	}
 
+	public List<AccountEntity> getAllAccountsByUser(UserEntity user) {
+		return accountRepository.findByOwner(user).stream().toList();
+	}
+
 	private void validStatusTransition(AccountStatus currentStatus, AccountStatusRequest newStatus) {
 		boolean validTransition = (currentStatus == AccountStatus.ACTIVE && newStatus.getStatus() == AccountStatus.BLOCKED)
 				|| (currentStatus == AccountStatus.BLOCKED && newStatus.getStatus() == AccountStatus.ACTIVE);

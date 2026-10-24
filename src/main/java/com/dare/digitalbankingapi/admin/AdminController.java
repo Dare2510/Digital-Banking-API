@@ -26,7 +26,8 @@ public class AdminController {
 	}
 
 	@PostMapping("/employee/{userId}/profile")
-	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@PathVariable Long userId, @Valid @RequestBody UserProfileRequest userProfileRequest) {
+	public ResponseEntity<UserProfileResponse> createEmployeeProfile(@PathVariable Long userId,
+																	 @Valid @RequestBody UserProfileRequest userProfileRequest) {
 		return ResponseEntity.ok(userProfileService.createUserProfile(userId, userProfileRequest));
 	}
 

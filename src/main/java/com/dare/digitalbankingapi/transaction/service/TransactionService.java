@@ -13,6 +13,8 @@ import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundExce
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
+import com.dare.digitalbankingapi.user.entity.UserEntity;
+import com.dare.digitalbankingapi.user.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -40,6 +43,7 @@ public class TransactionService {
 			"balanceAfter",
 			"transfer"
 	);
+	private final UserService userService;
 
 	@Transactional
 	public TransactionResponse deposit(TransactionRequest request) {
@@ -132,6 +136,33 @@ public class TransactionService {
 		return transactionRepository.findAll(pageable)
 				.map(this::buildResponse);
 	}
+
+	public List<TransactionResponse> getAllTransactionsByAuthenticatedUser(AuthenticatedUser authenticatedUser) {
+		Long userId = authenticatedUser.getUserId();
+
+		List<TransactionEntity> transactions = transactionRepository.findAllByAccount_Owner_Id(userId);
+
+		return transactions.stream().map(transaction -> {
+					TransferEntity transfer = transaction.getTransfer();
+					return TransactionResponse.builder()
+							.fromAccountId(
+									transfer != null
+											? transfer.getFromAccount().getId()
+											: transaction.getAccount().getId()
+							)
+							.toAccountId(
+									transfer != null
+											? transfer.getToAccount().getId()
+											: null
+							)
+							.amount(transaction.getAmount())
+							.reference(transaction.getReference())
+							.balanceAfter(transaction.getBalanceAfter())
+							.build();
+				})
+				.toList();
+	}
+
 
 	//Helper
 

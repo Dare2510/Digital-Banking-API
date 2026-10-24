@@ -11,10 +11,10 @@ Base path: `/api`
 ## Customer / Accounts
 
 - POST /customer/accounts — Create account
-  GET /customer/accounts/all - Get all accounts by user
-- GET /customer/accounts/{accountId} — Get account details
-- POST /customer/accounts/withdrawals — Withdraw money
-- POST /customer/accounts/{accountId}/close — Close account
+- GET /customer/accounts/all - Authenticated user can get information about all of his accounts
+- GET /customer/accounts/{accountId} — Get account details - user needs to be authenticated
+- POST /customer/accounts/withdrawals — Withdraw money - user needs to be authenticated
+- POST /customer/accounts/{accountId}/close — Close account - user needs to be authenticated
 
 ## Transfers
 
@@ -42,9 +42,6 @@ Base path: `/api`
 
 - GET /transactions — Get authenticated user's transactions
 - GET /transactions/{transactionId} — Get transaction details
-- Account ownership validation for customer operations
-- Role-based access control (CUSTOMER, STAFF, ADMIN)
-- Spring Security / JWT authorization
 - Audit logging (optional)
 
 ## Account Status Rules
