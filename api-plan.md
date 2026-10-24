@@ -23,6 +23,7 @@ Base path: `/api`
 - GET /customer/transfers/all/{accountId} — Get outgoing and incoming transfers
 
 ## Transactions
+
 -GET /customer/transaction - Get authenticated user's transactions
 -GET /customer/transaction/{transactionId} - Get transaction details
 
@@ -43,6 +44,7 @@ Base path: `/api`
 - PATCH /admin/users/{userId}/userRole — Change user userRole
 
 ## Planned Features
+
 - Audit logging (optional)
 
 ## Account Status Rules

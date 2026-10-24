@@ -13,7 +13,6 @@ import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundExce
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
-import com.dare.digitalbankingapi.user.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
