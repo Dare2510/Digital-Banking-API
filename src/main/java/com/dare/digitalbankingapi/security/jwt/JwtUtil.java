@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
+import java.util.Locale;
 
 @Component
 public class JwtUtil {
@@ -25,7 +26,7 @@ public class JwtUtil {
 
 	public String generateToken(String email, UserRole role, Long userId) {
 		return Jwts.builder().
-				subject(email).
+				subject(email.trim().toLowerCase(Locale.ROOT)).
 				claim("userRole", role.name()).
 				claim("userId", userId).
 				issuedAt(new Date(System.currentTimeMillis())).

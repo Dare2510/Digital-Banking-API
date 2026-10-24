@@ -39,7 +39,7 @@ public class UserService {
 	private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
 			"id",
 			"email",
-			"role"
+			"userRole"
 	);
 
 	@Transactional

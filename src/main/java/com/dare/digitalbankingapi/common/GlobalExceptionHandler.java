@@ -11,10 +11,7 @@ import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceExcepti
 import com.dare.digitalbankingapi.transfer.exceptions.NotEqualCurrencyException;
 import com.dare.digitalbankingapi.transfer.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transfer.exceptions.TransferNotFoundException;
-import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
-import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
-import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
-import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
+import com.dare.digitalbankingapi.user.exceptions.*;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -96,6 +93,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, HttpServletRequest request) {
 
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
+	}
+
+	@ExceptionHandler(UserIncorrectCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleUserIncorrectCredentialsException(UserIncorrectCredentialsException ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.UNAUTHORIZED);
 	}
 
 	//Profile
