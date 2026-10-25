@@ -22,13 +22,13 @@ concurrency, security, and database integrity.
 - Database migrations with Flyway
 - PostgreSQL integration
 - Docker Compose configuration
-
-## Planned Features
-
 - Spring Security and JWT authentication
 - Role-based authorization (CUSTOMER, STAFF, ADMIN)
 - Account ownership enforcement
 - Customer transaction history endpoints
+
+## Planned Features
+
 - Integration and concurrency testing with Testcontainers
 - Audit logging (optional)
 
@@ -82,7 +82,7 @@ concurrency, security, and database integrity.
 - Each successful transfer creates two ledger entries: TRANSFER_OUT and TRANSFER_IN.
 - A transfer must either complete fully or be rolled back completely.
 
-### Security (Planned)
+### Security
 
 - JWT-based authentication.
 - Role-based authorization for CUSTOMER, STAFF, and ADMIN.
@@ -100,7 +100,4 @@ The `docs/` directory contains:
 - Planned JWT login sequence diagram
 
 ## Development Status
-
-The core banking functionality is under development. Authentication, authorization,
-and additional integration and concurrency testing
-are planned before the project is considered complete.
+Integration, unit and concurrency testing are planned before the project is considered complete.
