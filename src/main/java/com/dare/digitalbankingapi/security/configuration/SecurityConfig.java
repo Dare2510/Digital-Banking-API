@@ -4,6 +4,7 @@ import com.dare.digitalbankingapi.security.handler.CustomAccessDeniedHandler;
 import com.dare.digitalbankingapi.security.handler.CustomAuthenticationEntryPoint;
 import com.dare.digitalbankingapi.security.jwt.JwTAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -58,5 +59,15 @@ public class SecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public FilterRegistrationBean<JwTAuthenticationFilter> jwtFilterRegistration(JwTAuthenticationFilter filter) {
+		FilterRegistrationBean<JwTAuthenticationFilter> registration =
+				new FilterRegistrationBean<>(filter);
+
+		registration.setEnabled(false);
+
+		return registration;
 	}
 }
