@@ -40,9 +40,11 @@ public class UserProfileService {
 		UserProfileEntity profileEntity = createUserProfileEntity(connectedUser, userProfileRequest);
 
 		try {
+			profileEntity.setStatus(ProfileStatus.COMPLETE);
+
 			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
 			log.info("Created User Profile for user {} ", connectedUser.getId());
-			savedProfile.setStatus(ProfileStatus.COMPLETE);
+
 
 			return modelMapper.map(savedProfile, UserProfileResponse.class);
 
@@ -70,9 +72,11 @@ public class UserProfileService {
 		UserProfileEntity profileEntity = createUserProfileEntity(userForProfileCreation, userProfileRequest);
 
 		try {
+			profileEntity.setStatus(ProfileStatus.COMPLETE);
+
 			UserProfileEntity savedProfile = userProfileRepository.saveAndFlush(profileEntity);
 			log.info("Created Employee User Profile for user {} ", userForProfileCreation.getId());
-			savedProfile.setStatus(ProfileStatus.COMPLETE);
+
 
 			return modelMapper.map(savedProfile, UserProfileResponse.class);
 
@@ -90,6 +94,10 @@ public class UserProfileService {
 					log.error("Could not find profile for user {}", userId);
 					return new UserProfileNotFoundException(userId);
 				});
+	}
+
+	public UserProfileEntity getProfileEntityOrNull(Long userId) {
+		return userProfileRepository.findByUserId(userId).orElse(null);
 	}
 
 	private UserProfileEntity createUserProfileEntity(UserEntity user, UserProfileRequest userProfileRequest) {

@@ -114,7 +114,8 @@ public class AccountService {
 
 		return accountRepository.findAll(pageable)
 				.map(account -> {
-					UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
+					UserProfileEntity userProfile = userProfileService.
+							getProfileEntityOrNull(account.getOwner().getId());
 					return responseBuilder(userProfile, account);
 				});
 	}
@@ -205,19 +206,19 @@ public class AccountService {
 				.toUpperCase();
 	}
 
+
 	private AccountResponse responseBuilder(UserProfileEntity ownerProfile, AccountEntity account) {
-
 		return AccountResponse.builder()
-
 				.id(account.getId())
-				.name(ownerProfile.getName())
-				.surname(ownerProfile.getSurname())
+				.name(ownerProfile != null ? ownerProfile.getName() : null)
+				.surname(ownerProfile != null ? ownerProfile.getSurname() : null)
 				.accountNumber(account.getAccountNumber())
 				.currency(account.getCurrency())
 				.balance(account.getBalance())
 				.status(account.getStatus())
 				.build();
 	}
+
 
 	//Overloaded for Customers
 	private AccountResponse responseBuilder(AccountEntity account) {

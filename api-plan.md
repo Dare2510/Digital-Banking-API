@@ -24,8 +24,8 @@ Base path: `/api`
 
 ## Transactions
 
--GET /customer/transaction - Get authenticated user's transactions
--GET /customer/transaction/{transactionId} - Get transaction details
+-GET /customer/transactions - Get authenticated user's transactions
+-GET /customer/transactions/{transactionId} - Get transaction details
 
 ## Staff
 

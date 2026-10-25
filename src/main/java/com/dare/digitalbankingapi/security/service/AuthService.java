@@ -3,11 +3,14 @@ package com.dare.digitalbankingapi.security.service;
 import com.dare.digitalbankingapi.security.jwt.JwtUtil;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.exceptions.UserIncorrectCredentialsException;
+import com.dare.digitalbankingapi.user.exceptions.UserNotFoundException;
 import com.dare.digitalbankingapi.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -19,18 +22,29 @@ public class AuthService {
 	private final JwtUtil jwtUtil;
 
 	public String login(String email, String password) {
-		UserEntity user = userService.getUserByEmail(email);
 
-		boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
+		String normalizedEmail = email.trim()
+				.toLowerCase(Locale.ROOT);
 
-		if (!passwordMatches) {
-			log.info("Wrong password input for user with email: {}", email);
+		UserEntity user;
+
+		try {
+			user = userService.getUserByEmail(normalizedEmail);
+		} catch (UserNotFoundException ex) {
 			throw new UserIncorrectCredentialsException();
 		}
 
-		log.info("Successful login for user with email: {}", email);
-		return jwtUtil.generateToken(email, user.getUserRole(), user.getId());
+		if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+			throw new UserIncorrectCredentialsException();
+		}
 
+		log.info("Successful login for user with id {}", user.getId());
+
+		return jwtUtil.generateToken(
+				user.getEmail(),
+				user.getUserRole(),
+				user.getId()
+		);
 	}
 
 }

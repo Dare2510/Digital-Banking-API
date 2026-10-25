@@ -1,5 +1,6 @@
 package com.dare.digitalbankingapi.transfer.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -26,7 +27,7 @@ public class TransferRequest {
 	@Positive(message = "Amount id must be > 0")
 	private BigDecimal amount;
 
-	@NotNull(message = "Reference ist required")
+	@NotBlank(message = "Reference is required")
 	@Size(max = 30, message = "Reference must not exceed 30 characters")
 	private String reference;
 }

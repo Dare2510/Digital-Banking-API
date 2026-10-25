@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(AccountOperationNotAllowedException.class)
 	public ResponseEntity<ErrorResponse> handleAccountOperationNotAllowedException(AccountOperationNotAllowedException ex, HttpServletRequest request) {
-		return errorResponseBuilder(ex, request, HttpStatus.METHOD_NOT_ALLOWED);
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
 	}
 
 	//Transfer
