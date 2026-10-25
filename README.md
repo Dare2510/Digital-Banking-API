@@ -58,7 +58,7 @@ concurrency, security, and database integrity.
 ### Bank Accounts
 
 - An account belongs to exactly one user.
-- Each account uses exactly one currency (EUR, USD, JPY).
+- Each account uses exactly one currency (EUR, USD, GBD).
 - Account statuses are ACTIVE, BLOCKED, and CLOSED.
 - Only ACTIVE accounts can perform monetary operations.
 - ACTIVE accounts can be blocked and BLOCKED accounts can be reactivated.

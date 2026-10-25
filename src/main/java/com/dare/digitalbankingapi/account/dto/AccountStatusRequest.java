@@ -13,6 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AccountStatusRequest {
 
-	@NotNull
+	@NotNull(message = "Status is required")
 	private AccountStatus status;
 }
