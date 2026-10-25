@@ -14,10 +14,10 @@ import java.util.Locale;
 @Component
 public class JwtUtil {
 
-	@Value("${JWT_SECRET}")
+	@Value("${jwt.secret}")
 	String jwtSecret;
 
-	@Value("${JWT_EXPIRATION_MS}")
+	@Value("${jwt.expiration-ms}")
 	Long jwtExpirationMs;
 
 	private Key getSigningKey() {

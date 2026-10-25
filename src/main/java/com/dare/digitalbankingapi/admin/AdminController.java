@@ -31,7 +31,7 @@ public class AdminController {
 		return ResponseEntity.ok(userProfileService.createUserProfile(userId, userProfileRequest));
 	}
 
-	@PatchMapping("/users/{userId}/role")
+	@PatchMapping("/users/{userId}/userRole")
 	public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long userId, @RequestBody UserRole userRole) {
 		return ResponseEntity.ok(userService.updateUserRole(userId, userRole));
 	}

@@ -52,7 +52,7 @@ class TransactionEntity {
 enum Currency {
     EUR
     USD
-    GBD
+    GBP
 }
 
 enum AccountStatus {

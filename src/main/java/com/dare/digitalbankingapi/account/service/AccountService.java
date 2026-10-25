@@ -90,7 +90,7 @@ public class AccountService {
 
 		AccountEntity account = getAccount(accountId);
 
-		UserProfileEntity userProfile = userProfileService.getProfileEntity(account.getOwner().getId());
+		UserProfileEntity userProfile = userProfileService.getProfileEntityOrNull(account.getOwner().getId());
 
 		return responseBuilder(userProfile, account);
 	}
