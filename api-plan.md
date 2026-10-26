@@ -6,6 +6,7 @@ Base path: `/api`
 
 - POST /auth/register — Register customer
 - POST /auth/register/profile — Complete customer profile
+- PATCH /auth/register/profile/update - Update customer profile
 - POST /auth/login — Login and receive JWT
 
 ## Customer / Accounts
@@ -41,6 +42,7 @@ Base path: `/api`
 
 - POST /admin/employee — Create employee
 - POST /admin/employee/{userId}/profile — Create employee profile
+- PATCH /admin/employee/{userId}/profile/update - Update employee profile
 - PATCH /admin/users/{userId}/userRole — Change user userRole
 
 ## Planned Features

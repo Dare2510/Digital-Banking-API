@@ -111,6 +111,13 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(UserProfileNotFoundException.class)
 	public ResponseEntity<ErrorResponse> handleUserProfileNotFoundException(UserProfileNotFoundException ex, HttpServletRequest request) {
 		return errorResponseBuilder(ex, request, HttpStatus.NOT_FOUND);
+
+	}
+
+	@ExceptionHandler(UserProfileUpdateFailedNoProfileExists.class)
+	public ResponseEntity<ErrorResponse> handleUserProfileUpdateFailedNoProfileExists(UserProfileUpdateFailedNoProfileExists ex, HttpServletRequest request) {
+		return errorResponseBuilder(ex, request, HttpStatus.CONFLICT);
+
 	}
 
 	//Account

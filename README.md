@@ -100,4 +100,5 @@ The `docs/` directory contains:
 - Planned JWT login sequence diagram
 
 ## Development Status
+
 Integration, unit and concurrency testing are planned before the project is considered complete.

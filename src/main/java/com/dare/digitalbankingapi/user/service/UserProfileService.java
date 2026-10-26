@@ -8,6 +8,7 @@ import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileAlreadyExistsException;
 import com.dare.digitalbankingapi.user.exceptions.UserProfileNotFoundException;
+import com.dare.digitalbankingapi.user.exceptions.UserProfileUpdateFailedNoProfileExists;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -88,6 +91,52 @@ public class UserProfileService {
 		}
 	}
 
+	public UserProfileResponse updateUserProfile(AuthenticatedUser authenticatedUser, UserProfileRequest userProfileRequest) {
+
+		UserEntity userForUpdate = userService.getUserById(authenticatedUser.getUserId());
+
+		boolean profileExists = userProfileRepository.existsByUserId(authenticatedUser.getUserId());
+
+		if (!profileExists) {
+			log.info("User Profile for user {} does not exist, update not possible", userForUpdate.getId());
+
+			throw new UserProfileUpdateFailedNoProfileExists(authenticatedUser.getUserId());
+		}
+
+		UserProfileEntity profileToUpdate = getProfileEntity(authenticatedUser.getUserId());
+
+		profileUpdater(profileToUpdate, userProfileRequest);
+
+		userProfileRepository.saveAndFlush(profileToUpdate);
+
+		return modelMapper.map(profileToUpdate, UserProfileResponse.class);
+
+
+	}
+
+	public UserProfileResponse updateUserProfile(Long employeeUserId, UserProfileRequest userProfileRequest) {
+
+		UserEntity employeeToUpdate = userService.getUserById(employeeUserId);
+
+		boolean profileExists = userProfileRepository.existsByUserId(employeeUserId);
+
+		if (!profileExists) {
+			log.info("User Profile for employee {} does not exist, update not possible", employeeToUpdate.getId());
+
+			throw new UserProfileUpdateFailedNoProfileExists(employeeUserId);
+		}
+
+		UserProfileEntity profileToUpdate = getProfileEntity(employeeUserId);
+
+		profileUpdater(profileToUpdate, userProfileRequest);
+
+		userProfileRepository.saveAndFlush(profileToUpdate);
+
+		return modelMapper.map(profileToUpdate, UserProfileResponse.class);
+
+
+	}
+
 	public UserProfileEntity getProfileEntity(Long userId) {
 		return userProfileRepository.findByUserId(userId).orElseThrow(
 				() -> {
@@ -111,6 +160,19 @@ public class UserProfileService {
 				userProfileRequest.getZipCode(),
 				userProfileRequest.getCountry()
 		);
+
+	}
+
+	private void profileUpdater(UserProfileEntity toUpdate, UserProfileRequest userProfileRequest) {
+
+		toUpdate.setName(userProfileRequest.getName());
+		toUpdate.setSurname(userProfileRequest.getSurname());
+		toUpdate.setStreet(userProfileRequest.getStreet());
+		toUpdate.setHouseNumber(userProfileRequest.getHouseNumber());
+		toUpdate.setCity(userProfileRequest.getCity());
+		toUpdate.setZipCode(userProfileRequest.getZipCode());
+		toUpdate.setCountry(userProfileRequest.getCountry());
+		toUpdate.setUpdatedAt(LocalDateTime.now());
 
 	}
 
