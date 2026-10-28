@@ -11,7 +11,6 @@ import com.dare.digitalbankingapi.user.exceptions.UserProfileUpdateFailedNoProfi
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.service.UserProfileService;
 import com.dare.digitalbankingapi.user.service.UserService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,7 @@ import org.modelmapper.ModelMapper;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,28 +61,23 @@ public class UserProfileServiceTest {
 	@BeforeEach
 	public void setUp() {
 		userProfileService = new UserProfileService(userService
-		,userProfileRepository,modelMapper);
-	}
-
-	@AfterEach
-	public void tearDown() {
-		userProfileRepository.deleteAll();
+				, userProfileRepository, modelMapper);
 	}
 
 	//Helper
-	private UserProfileRequest userProfileRequest() {
-		return new UserProfileRequest(NAME,SURNAME,STREET,
-				HOUSE_NUMBER,CITY,ZIPCODE,COUNTRY);
+	private UserProfileRequest newUserProfileRequest() {
+		return new UserProfileRequest(NAME, SURNAME, STREET,
+				HOUSE_NUMBER, CITY, ZIPCODE, COUNTRY);
 	}
 
 	private UserProfileRequest updateduserProfileRequest() {
-		return new UserProfileRequest(NAME,SURNAME,UPDATED_STREET,
-				UPDATED_HOUSE_NUMBER,UPDATED_CITY,UPDATED_ZIPCODE,COUNTRY);
+		return new UserProfileRequest(NAME, SURNAME, UPDATED_STREET,
+				UPDATED_HOUSE_NUMBER, UPDATED_CITY, UPDATED_ZIPCODE, COUNTRY);
 	}
 
 	private AuthenticatedUser returnAuthenticatedUser() {
 		return new AuthenticatedUser(
-				USER_ID,EMAIL,USER_ROLE
+				USER_ID, EMAIL, USER_ROLE
 		);
 
 	}
@@ -92,7 +86,7 @@ public class UserProfileServiceTest {
 		String HASHED_PASSWORD = "hashedPassword";
 
 		UserEntity user = new UserEntity(
-				EMAIL, HASHED_PASSWORD,USER_ROLE
+				EMAIL, HASHED_PASSWORD, USER_ROLE
 		);
 
 		user.setId(USER_ID);
@@ -100,7 +94,7 @@ public class UserProfileServiceTest {
 		return user;
 	}
 
-	private void profileSetter(UserProfileEntity profile,UserProfileRequest userProfileRequest) {
+	private void profileSetter(UserProfileEntity profile, UserProfileRequest userProfileRequest) {
 
 		profile.setName(userProfileRequest.getName());
 		profile.setSurname(userProfileRequest.getSurname());
@@ -114,37 +108,36 @@ public class UserProfileServiceTest {
 	}
 
 
-
 	@Test
 	public void testCreateUserProfile_whenRequestIsValid_returnUserProfileResponse() {
 
-		AuthenticatedUser authenticatedUser = returnAuthenticatedUser();
-		UserProfileRequest userProfileRequest = userProfileRequest();
-		UserEntity userEntity = returnUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser();
+		UserProfileRequest validProfileRequest = newUserProfileRequest();
+		UserEntity user = returnUserEntity();
 
-		when(userService.getUserById(USER_ID)).thenReturn(userEntity);
-		when(userProfileRepository.existsByUserId(USER_ID)).thenReturn(false);
+		when(userService.getUserById(loggedInUser.getUserId())).thenReturn(user);
+		when(userProfileRepository.existsByUserId(loggedInUser.getUserId())).thenReturn(false);
 		when(userProfileRepository.saveAndFlush(any(UserProfileEntity.class))).thenAnswer(
 				invocation -> {
 
-						UserProfileEntity profile = invocation.getArgument(0);
-						profileSetter(profile,userProfileRequest);
-						return profile;
+					UserProfileEntity profile = invocation.getArgument(0);
+					profileSetter(profile, validProfileRequest);
+					return profile;
 				});
 
 
-		UserProfileResponse userProfileResponse = userProfileService.createUserProfile(authenticatedUser,userProfileRequest);
+		UserProfileResponse userProfileResponse = userProfileService.createUserProfile(loggedInUser, validProfileRequest);
 
-		assertEquals(NAME,userProfileResponse.getName());
-		assertEquals(SURNAME,userProfileResponse.getSurname());
-		assertEquals(STREET,userProfileResponse.getStreet());
-		assertEquals(HOUSE_NUMBER,userProfileResponse.getHouseNumber());
-		assertEquals(CITY,userProfileResponse.getCity());
-		assertEquals(ZIPCODE,userProfileResponse.getZipCode());
-		assertEquals(COUNTRY,userProfileResponse.getCountry());
+		assertEquals(NAME, userProfileResponse.getName());
+		assertEquals(SURNAME, userProfileResponse.getSurname());
+		assertEquals(STREET, userProfileResponse.getStreet());
+		assertEquals(HOUSE_NUMBER, userProfileResponse.getHouseNumber());
+		assertEquals(CITY, userProfileResponse.getCity());
+		assertEquals(ZIPCODE, userProfileResponse.getZipCode());
+		assertEquals(COUNTRY, userProfileResponse.getCountry());
 
-		verify(userProfileRepository, times(1)).existsByUserId(USER_ID);
-		verify(userService, times(1)).getUserById(USER_ID);
+		verify(userProfileRepository, times(1)).existsByUserId(loggedInUser.getUserId());
+		verify(userService, times(1)).getUserById(loggedInUser.getUserId());
 		verify(userProfileRepository, times(1)).saveAndFlush(any(UserProfileEntity.class));
 
 
@@ -152,45 +145,45 @@ public class UserProfileServiceTest {
 
 	@Test
 	public void createUserProfile_whenUserProfileExists_throwsUserProfileServiceException() {
-		AuthenticatedUser authenticatedUser = returnAuthenticatedUser();
-		UserProfileRequest userProfileRequest = userProfileRequest();
-		UserEntity userEntity = returnUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser();
+		UserProfileRequest existingRequest = newUserProfileRequest();
+		UserEntity user = returnUserEntity();
 
-		when(userService.getUserById(USER_ID)).thenReturn(userEntity);
-		when(userProfileRepository.existsByUserId(USER_ID)).thenReturn(true);
+		when(userService.getUserById(loggedInUser.getUserId())).thenReturn(user);
+		when(userProfileRepository.existsByUserId(loggedInUser.getUserId())).thenReturn(true);
 
 		assertThatThrownBy(() ->
-				userProfileService.createUserProfile(authenticatedUser.getUserId(), userProfileRequest))
+				userProfileService.createUserProfile(loggedInUser.getUserId(), existingRequest))
 				.isInstanceOf(UserProfileAlreadyExistsException.class)
-				.hasMessage("UserProfile already exists for user id: " + USER_ID);
+				.hasMessage("UserProfile already exists for user id: " + loggedInUser.getUserId());
 
-		verify(userService, times(1)).getUserById(USER_ID);
+		verify(userService, times(1)).getUserById(loggedInUser.getUserId());
 		verify(userProfileRepository, never()).saveAndFlush(any(UserProfileEntity.class));
 	}
 
 	@Test
 	public void updateUserProfile_whenUserProfileExists_returnUserProfileResponse() {
-		AuthenticatedUser authenticatedUser = returnAuthenticatedUser();
-		UserProfileRequest userProfileRequest = updateduserProfileRequest();
-		UserEntity userEntity = returnUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser();
+		UserProfileRequest updateRequest = updateduserProfileRequest();
+		UserEntity user = returnUserEntity();
 		UserProfileEntity profile = new UserProfileEntity();
-		profileSetter(profile,userProfileRequest);
+		profileSetter(profile, updateRequest);
 
-		when(userService.getUserById(USER_ID)).thenReturn(userEntity);
-		when(userProfileRepository.existsByUserId(USER_ID)).thenReturn(true);
+		when(userService.getUserById(loggedInUser.getUserId())).thenReturn(user);
+		when(userProfileRepository.existsByUserId(loggedInUser.getUserId())).thenReturn(true);
 
-		when(userProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+		when(userProfileRepository.findByUserId(loggedInUser.getUserId())).thenReturn(Optional.of(profile));
 
-		UserProfileResponse userProfileResponse = userProfileService.updateUserProfile(authenticatedUser,userProfileRequest);
+		UserProfileResponse userProfileResponse = userProfileService.updateUserProfile(loggedInUser, updateRequest);
 
-		assertEquals(UPDATED_CITY,userProfileResponse.getCity());
-		assertEquals(UPDATED_HOUSE_NUMBER,userProfileResponse.getHouseNumber());
-		assertEquals(UPDATED_STREET,userProfileResponse.getStreet());
-		assertEquals(UPDATED_ZIPCODE,userProfileResponse.getZipCode());
+		assertEquals(UPDATED_CITY, userProfileResponse.getCity());
+		assertEquals(UPDATED_HOUSE_NUMBER, userProfileResponse.getHouseNumber());
+		assertEquals(UPDATED_STREET, userProfileResponse.getStreet());
+		assertEquals(UPDATED_ZIPCODE, userProfileResponse.getZipCode());
 
-		verify(userService, times(1)).getUserById(USER_ID);
-		verify(userProfileRepository, times(1)).findByUserId(USER_ID);
-		verify(userProfileRepository, times(1)).existsByUserId(USER_ID);
+		verify(userService, times(1)).getUserById(loggedInUser.getUserId());
+		verify(userProfileRepository, times(1)).findByUserId(loggedInUser.getUserId());
+		verify(userProfileRepository, times(1)).existsByUserId(loggedInUser.getUserId());
 		verify(userProfileRepository, times(1)).saveAndFlush(any(UserProfileEntity.class));
 
 
@@ -198,29 +191,23 @@ public class UserProfileServiceTest {
 
 	@Test
 	public void updateUserProfile_whenUserProfileDoesNotExists_throwsUserProfileUpdateFailedNoProfileExistsException() {
-		AuthenticatedUser authenticatedUser = returnAuthenticatedUser();
-		UserProfileRequest userProfileRequest = userProfileRequest();
-		UserEntity userEntity = returnUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser();
+		UserProfileRequest updateRequestOfNotExistingProfile = newUserProfileRequest();
+		UserEntity user = returnUserEntity();
 
-		when(userService.getUserById(USER_ID)).thenReturn(userEntity);
-		when(userProfileRepository.existsByUserId(USER_ID)).thenReturn(false);
+		when(userService.getUserById(loggedInUser.getUserId())).thenReturn(user);
+		when(userProfileRepository.existsByUserId(loggedInUser.getUserId())).thenReturn(false);
 
-		assertThatThrownBy( () ->
-				userProfileService.updateUserProfile(authenticatedUser,userProfileRequest))
+		assertThatThrownBy(() ->
+				userProfileService.updateUserProfile(loggedInUser, updateRequestOfNotExistingProfile))
 				.isInstanceOf(UserProfileUpdateFailedNoProfileExists.class)
 				.hasMessage("Profile update failed for user id: " + USER_ID + "no profile exists");
 
-		verify(userService, times(1)).getUserById(USER_ID);
-		verify(userProfileRepository, times(1)).existsByUserId(USER_ID);
+		verify(userService, times(1)).getUserById(loggedInUser.getUserId());
+		verify(userProfileRepository, times(1)).existsByUserId(loggedInUser.getUserId());
 		verify(userProfileRepository, never()).saveAndFlush(any(UserProfileEntity.class));
 
 	}
-
-
-
-
-
-
 
 
 }

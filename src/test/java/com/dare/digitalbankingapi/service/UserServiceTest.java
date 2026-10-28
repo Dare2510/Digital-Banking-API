@@ -10,7 +10,6 @@ import com.dare.digitalbankingapi.user.exceptions.EmailNotAvailableException;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
 import com.dare.digitalbankingapi.user.service.UserService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,12 +32,16 @@ public class UserServiceTest {
 	private UserService userService;
 
 	private SortValidator sortValidator;
+
 	@Mock
 	private UserRepository userRepository;
+
 	@Mock
 	private UserProfileRepository userProfileRepository;
+
 	@Mock
 	private PasswordEncoder passwordEncoder;
+
 	@Spy
 	private ModelMapper modelMapper;
 
@@ -56,12 +59,6 @@ public class UserServiceTest {
 				passwordEncoder, modelMapper, sortValidator);
 	}
 
-	@AfterEach
-	public void tearDown() {
-		userProfileRepository.deleteAll();
-		userRepository.deleteAll();
-	}
-
 	//Helpers
 	private CustomerUserRequest validCustomerRequest() {
 		return new CustomerUserRequest(EMAIL, PASSWORD);
@@ -74,12 +71,12 @@ public class UserServiceTest {
 
 	@Test
 	public void createCustomerUser_whenRequestIsValid_returnsUserResponse() {
-		CustomerUserRequest request = validCustomerRequest();
+		CustomerUserRequest validRequest = validCustomerRequest();
 
-		String normalizedMail = request.getEmail().toLowerCase(Locale.ROOT).trim();
+		String normalizedMail = validRequest.getEmail().toLowerCase(Locale.ROOT).trim();
 
 		when(userRepository.existsByEmail(normalizedMail)).thenReturn(false);
-		when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED_PASSWORD);
+		when(passwordEncoder.encode(validRequest.getPassword())).thenReturn(HASHED_PASSWORD);
 
 		when(userRepository.saveAndFlush(any(UserEntity.class))).
 				thenAnswer(
@@ -91,7 +88,7 @@ public class UserServiceTest {
 
 						});
 
-		UserResponse customerUserResponse = userService.createCostumerUser(request);
+		UserResponse customerUserResponse = userService.createCostumerUser(validRequest);
 
 		assertEquals(normalizedMail, customerUserResponse.getEmail());
 		assertEquals(USER_ID, customerUserResponse.getId());
@@ -104,13 +101,13 @@ public class UserServiceTest {
 
 	@Test
 	public void createCustomerUser_whenRequestEmailIsAlreadyUsed_throwsEmailNotAvailableException() {
-		CustomerUserRequest request = validCustomerRequest();
+		CustomerUserRequest emailUsedRequest = validCustomerRequest();
 
-		String normalizedMail = request.getEmail().toLowerCase(Locale.ROOT).trim();
+		String normalizedMail = emailUsedRequest.getEmail().toLowerCase(Locale.ROOT).trim();
 
 		when(userRepository.existsByEmail(normalizedMail)).thenReturn(true);
 
-		assertThatThrownBy(() -> userService.createCostumerUser(request))
+		assertThatThrownBy(() -> userService.createCostumerUser(emailUsedRequest))
 				.isInstanceOf(EmailNotAvailableException.class)
 				.hasMessage("Email " + normalizedMail + " is already taken");
 
@@ -121,11 +118,11 @@ public class UserServiceTest {
 
 	@Test
 	public void createEmployeeUser_whenRequestIsValid_returnsUserResponse() {
-		EmployeeUserRequest request = validEmployeeRequest();
-		String normalizedMail = request.getEmail().toLowerCase(Locale.ROOT).trim();
+		EmployeeUserRequest validRequest = validEmployeeRequest();
+		String normalizedMail = validRequest.getEmail().toLowerCase(Locale.ROOT).trim();
 
 		when(userRepository.existsByEmail(normalizedMail)).thenReturn(false);
-		when(passwordEncoder.encode(PASSWORD)).thenReturn(HASHED_PASSWORD);
+		when(passwordEncoder.encode(validRequest.getPassword())).thenReturn(HASHED_PASSWORD);
 
 		when(userRepository.saveAndFlush(any(UserEntity.class))).thenAnswer(
 				i -> {
@@ -136,20 +133,19 @@ public class UserServiceTest {
 					return employee;
 
 				});
-		UserResponse employeeResponse = userService.createEmployeeUser(request);
+		UserResponse newEmployeeUserResponse = userService.createEmployeeUser(validRequest);
 
-		assertEquals(normalizedMail, employeeResponse.getEmail());
-		assertEquals(USER_ID, employeeResponse.getId());
-		assertEquals(STAFF_USER_ROLE, employeeResponse.getUserRole());
+		assertEquals(normalizedMail, newEmployeeUserResponse.getEmail());
+		assertEquals(USER_ID, newEmployeeUserResponse.getId());
+		assertEquals(STAFF_USER_ROLE, newEmployeeUserResponse.getUserRole());
 
 		verify(userRepository, times(1)).saveAndFlush(any(UserEntity.class));
 		verify(userRepository, times(1)).existsByEmail(normalizedMail);
-		verify(passwordEncoder, times(1)).encode(PASSWORD);
+		verify(passwordEncoder, times(1)).encode(validRequest.getPassword());
 	}
 
 
-
-	}
+}
 
 
 
