@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -148,5 +149,31 @@ public class AccountServiceTest {
 
 		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
 
+	}
+
+	@Test
+	public void viewAllAccounts_whenCustomerHasMultipleAccounts_returnsListOfAccountResponses() {
+		UserEntity loggedInCustomer = returnUserEntity();
+		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
+
+		AccountEntity firstAccount = new AccountEntity();
+		setAccountValues(firstAccount,loggedInCustomer,new AccountRequest(Currency.EUR));
+		firstAccount.setId((1L));
+		AccountEntity secondAccount = new AccountEntity();
+		setAccountValues(secondAccount,loggedInCustomer,new AccountRequest(Currency.GBP));
+		secondAccount.setId((2L));
+
+		when(userService.getUserById(authenticatedUser.getUserId())).thenReturn(loggedInCustomer);
+		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(List.of(firstAccount,secondAccount));
+		List<AccountResponse> accounts = accountService.viewAllAccountsByUser(authenticatedUser);
+
+		assertEquals(2, accounts.size());
+		assertEquals(1L,accounts.get(0).getId());
+		assertEquals(2L,accounts.get(1).getId());
+		assertEquals(Currency.EUR,accounts.get(0).getCurrency());
+		assertEquals(Currency.GBP,accounts.get(1).getCurrency());
+
+		verify(accountRepository,times(1)).findByOwner(loggedInCustomer);
+		verify(userService,times(1)).getUserById(authenticatedUser.getUserId());
 	}
 }
