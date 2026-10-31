@@ -120,18 +120,6 @@ public class AccountService {
 				});
 	}
 
-	public AccountEntity getAccount(Long accountId) {
-
-		return accountRepository.findById(accountId)
-				.orElseThrow(() -> {
-					log.info(
-							"Account with id {} not found",
-							accountId
-					);
-					return new AccountNotFoundException(accountId);
-				});
-	}
-
 	@Transactional
 	public void changeAccountStatus(Long accountId, AccountStatusRequest newStatus) {
 		AccountEntity account = getAccount(accountId);
@@ -174,6 +162,18 @@ public class AccountService {
 	}
 
 	//Helper Methods
+
+	public AccountEntity getAccount(Long accountId) {
+
+		return accountRepository.findById(accountId)
+				.orElseThrow(() -> {
+					log.info(
+							"Account with id {} not found",
+							accountId
+					);
+					return new AccountNotFoundException(accountId);
+				});
+	}
 
 	public void checkAccountStatus(AccountEntity account) {
 		if (account.getStatus() != AccountStatus.ACTIVE) {

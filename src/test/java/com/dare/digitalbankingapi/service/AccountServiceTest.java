@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.service;
 
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
+import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
@@ -24,7 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -175,5 +178,38 @@ public class AccountServiceTest {
 
 		verify(accountRepository,times(1)).findByOwner(loggedInCustomer);
 		verify(userService,times(1)).getUserById(authenticatedUser.getUserId());
+	}
+
+	@Test
+	public void viewAllAccounts_whenUserHasNoAccounts_returnsEmptyList() {
+		UserEntity loggedInCustomer = returnUserEntity();
+		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
+
+		when(userService.getUserById(authenticatedUser.getUserId())).thenReturn(loggedInCustomer);
+		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(Collections.emptyList()
+		);
+		List<AccountResponse> accounts = accountService.viewAllAccountsByUser(authenticatedUser);
+
+		assertEquals(0,accounts.size());
+		verify(accountRepository,times(1)).findByOwner(loggedInCustomer);
+		verify(userService,times(1)).getUserById(authenticatedUser.getUserId());
+
+	}
+
+	@Test
+	public void changeAccountStatus_byStaffUser_changesAccountStatus() {
+		AccountStatusRequest accountStatusRequest = new AccountStatusRequest(AccountStatus.BLOCKED);
+		AccountEntity accountToUpdate = new AccountEntity();
+		UserEntity owner = returnUserEntity();
+		setAccountValues(accountToUpdate,owner,new AccountRequest(Currency.EUR));
+
+		when(accountRepository.findById(accountToUpdate.getId())).thenReturn(Optional.of(accountToUpdate));
+
+		accountService.changeAccountStatus(accountToUpdate.getId(),accountStatusRequest);
+
+		assertEquals(AccountStatus.BLOCKED,accountToUpdate.getStatus());
+		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
+
+
 	}
 }
