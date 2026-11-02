@@ -7,12 +7,9 @@ import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
-import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
-import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
-import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
@@ -29,8 +26,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TransferServiceTest {
@@ -67,7 +62,7 @@ public class TransferServiceTest {
 	}
 
 	private UserEntity returnUserEntity() {
-		UserEntity customer =  new UserEntity(
+		UserEntity customer = new UserEntity(
 				"testEmail@mail.com",
 				"passwordHash",
 				UserRole.CUSTOMER
@@ -79,10 +74,10 @@ public class TransferServiceTest {
 	}
 
 	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
-		return new AuthenticatedUser(user.getId(),user.getEmail(),user.getUserRole());
+		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
 	}
 
-	private void setAccountValues(AccountEntity accountEntity,Long accountId,String accountNumber,
+	private void setAccountValues(AccountEntity accountEntity, Long accountId, String accountNumber,
 								  UserEntity userEntity, AccountRequest accountRequest) {
 		accountEntity.setId(accountId);
 		accountEntity.setOwner(userEntity);
@@ -97,21 +92,23 @@ public class TransferServiceTest {
 	@Test
 	public void createTransferBetweenAccounts_whenRequestIsValid_returnsTransferResponse() {
 		AccountEntity fromAccount = new AccountEntity();
-		Long fromAccountId = 1L; String fromAccountNumber = "fromAccountNumber";
+		Long fromAccountId = 1L;
+		String fromAccountNumber = "fromAccountNumber";
 		UserEntity fromUser = returnUserEntity();
 		fromAccount.setId(1L);
 
-		setAccountValues(fromAccount,fromAccountId,fromAccountNumber,fromUser,new AccountRequest(Currency.EUR));
+		setAccountValues(fromAccount, fromAccountId, fromAccountNumber, fromUser, new AccountRequest(Currency.EUR));
 		fromAccount.setOwner(fromUser);
 		fromAccount.setBalance(new BigDecimal("1000"));
 
 		AccountEntity toAccount = new AccountEntity();
-		Long toAccountId = 2L; String toAccountNumber = "toAccountNumber";
+		Long toAccountId = 2L;
+		String toAccountNumber = "toAccountNumber";
 		UserEntity toUser = returnUserEntity();
 		toUser.setId(2L);
 		toAccount.setOwner(toUser);
 
-		setAccountValues(toAccount,toAccountId,toAccountNumber,toUser,new AccountRequest(Currency.EUR));
+		setAccountValues(toAccount, toAccountId, toAccountNumber, toUser, new AccountRequest(Currency.EUR));
 		toAccount.setBalance(new BigDecimal("100"));
 
 		AuthenticatedUser loggedInUser = returnAuthenticatedUser(fromUser);
@@ -119,18 +116,18 @@ public class TransferServiceTest {
 		BigDecimal amount = new BigDecimal("100");
 		String referenceNumber = "referenceNumber";
 
-		TransferRequest transferRequest = new TransferRequest(fromAccountId,toAccountId,amount,referenceNumber);
+		TransferRequest transferRequest = new TransferRequest(fromAccountId, toAccountId, amount, referenceNumber);
 
 
-		TransferResponse response = transferService.createTransferBetweenAccounts(loggedInUser,transferRequest);
+		TransferResponse response = transferService.createTransferBetweenAccounts(loggedInUser, transferRequest);
 
-		assertEquals(fromAccount.getBalance(),BigDecimal.valueOf(900));
-		assertEquals(toAccount.getBalance(),BigDecimal.valueOf(200));
+		assertEquals(fromAccount.getBalance(), BigDecimal.valueOf(900));
+		assertEquals(toAccount.getBalance(), BigDecimal.valueOf(200));
 		assertEquals(fromAccountId, response.getFromAccountId());
 		assertEquals(toAccountId, response.getToAccountId());
 		assertEquals(TRANSFER_ID, response.getTransferId());
 		assertEquals(amount, response.getAmount());
-		assertEquals(referenceNumber,response.getReference());
+		assertEquals(referenceNumber, response.getReference());
 
 	}
 
