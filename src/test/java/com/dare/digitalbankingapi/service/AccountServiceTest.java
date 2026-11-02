@@ -1,11 +1,14 @@
 package com.dare.digitalbankingapi.service;
 
+import com.dare.digitalbankingapi.account.dto.AccountClosureResponse;
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.dto.AccountResponse;
 import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
+import com.dare.digitalbankingapi.account.exceptions.AccountClosureFailedException;
+import com.dare.digitalbankingapi.account.exceptions.AccountInvalidStatusTransitionException;
 import com.dare.digitalbankingapi.account.exceptions.AccountNotFoundException;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.account.service.AccountService;
@@ -210,6 +213,79 @@ public class AccountServiceTest {
 		assertEquals(AccountStatus.BLOCKED,accountToUpdate.getStatus());
 		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
 
+
+	}
+
+	@Test
+	public void changeAccountStatus_whenTransitionIsInvalid_throwsAccountInvalidTransitionException() {
+		AccountStatusRequest accountStatusRequest = new AccountStatusRequest(AccountStatus.CLOSED);
+		AccountEntity accountToUpdate = new AccountEntity();
+		UserEntity owner = returnUserEntity();
+
+		//invalid transition from active to closed
+		setAccountValues(accountToUpdate,owner,new AccountRequest(Currency.EUR));
+
+		when(accountRepository.findById(accountToUpdate.getId())).thenReturn(Optional.of(accountToUpdate));
+
+		assertThatThrownBy(() -> accountService.changeAccountStatus(accountToUpdate.getId(),accountStatusRequest))
+				.isInstanceOf(AccountInvalidStatusTransitionException.class)
+				.hasMessage("Invalid status transition from " + accountToUpdate.getStatus() + " to " + accountStatusRequest.getStatus());
+
+		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
+		verify(accountRepository,never()).saveAndFlush(accountToUpdate);
+
+		assertEquals(AccountStatus.ACTIVE,accountToUpdate.getStatus());
+
+	}
+
+	@Test
+	public void closeAccount_whenRequestIsValid_returnsAccountClosureResponse() {
+		Long accountIdToClose = ACCOUNT_ID;
+		UserEntity loggedInCustomer = returnUserEntity();
+		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
+		AccountEntity accountToClose = new AccountEntity();
+
+		setAccountValues(accountToClose,loggedInCustomer,new AccountRequest(Currency.EUR));
+		accountToClose.setBalance(BigDecimal.ZERO);
+
+		when(accountRepository.findById(accountIdToClose)).thenReturn(Optional.of(accountToClose));
+
+		AccountClosureResponse response = accountService.closeAccount(authenticatedUser,accountIdToClose);
+
+		assertEquals(accountIdToClose,response.getAccountId());
+		assertEquals(accountToClose.getAccountNumber(),response.getAccountNumber());
+		assertEquals(AccountStatus.CLOSED,accountToClose.getStatus());
+
+		verify(accountRepository,times(1)).findById(accountIdToClose);
+		verify(accountRepository,times(1)).saveAndFlush(accountToClose);
+
+	}
+
+	@Test
+	public void closeAccount_whenBalanceIsNotZero_throwsAccountClosureFailedException() {
+		Long accountIdToClose = ACCOUNT_ID;
+		UserEntity loggedInCustomer = returnUserEntity();
+		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
+		AccountEntity accountToClose = new AccountEntity();
+
+		setAccountValues(accountToClose, loggedInCustomer, new AccountRequest(Currency.EUR));
+
+		//invalid Balance, must be zero
+		accountToClose.setBalance(BigDecimal.ONE);
+
+		when(accountRepository.findById(accountIdToClose)).thenReturn(Optional.of(accountToClose));
+
+		assertThatThrownBy(() -> accountService.closeAccount(authenticatedUser,accountIdToClose))
+		.isInstanceOf(AccountClosureFailedException.class)
+				.hasMessage("Account with id " + accountIdToClose
+						+ " cannot be closed. Current status: " + accountToClose.getStatus()
+						+ ", current balance: " + accountToClose.getBalance()
+						+ ". Account must be ACTIVE and have zero balance.");
+
+		verify(accountRepository,times(1)).findById(accountIdToClose);
+		verify(accountRepository,never()).saveAndFlush(accountToClose);
+
+		assertEquals(AccountStatus.ACTIVE,accountToClose.getStatus());
 
 	}
 }
