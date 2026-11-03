@@ -69,7 +69,7 @@ public class AccountServiceTest {
 	}
 
 	private UserEntity returnUserEntity() {
-		UserEntity customer =  new UserEntity(
+		UserEntity customer = new UserEntity(
 				"testEmail@mail.com",
 				"passwordHash",
 				UserRole.CUSTOMER
@@ -87,10 +87,10 @@ public class AccountServiceTest {
 	}
 
 	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
-		return new AuthenticatedUser(user.getId(),user.getEmail(),user.getUserRole());
+		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
 	}
 
-	private void setAccountValues(AccountEntity accountEntity,UserEntity userEntity,AccountRequest accountRequest) {
+	private void setAccountValues(AccountEntity accountEntity, UserEntity userEntity, AccountRequest accountRequest) {
 		accountEntity.setId(ACCOUNT_ID);
 		accountEntity.setOwner(userEntity);
 		accountEntity.setAccountNumber(ACCOUNT_NUMBER);
@@ -103,7 +103,7 @@ public class AccountServiceTest {
 
 	@BeforeEach
 	public void setup() {
-		accountService = new AccountService(accountRepository,userProfileService,userService,sortValidator);
+		accountService = new AccountService(accountRepository, userProfileService, userService, sortValidator);
 	}
 
 	@Test
@@ -119,19 +119,19 @@ public class AccountServiceTest {
 		when(accountRepository.saveAndFlush(any(AccountEntity.class))).
 				thenAnswer(i -> {
 					AccountEntity newAccount = i.getArgument(0);
-					setAccountValues(newAccount,customer,accountRequest);
+					setAccountValues(newAccount, customer, accountRequest);
 					return newAccount;
-						});
+				});
 
 		AccountResponse response = accountService.createAccount(authenticatedUser, returnAccountRequest());
 
 		assertEquals(ACCOUNT_ID, response.getId());
-		assertEquals(customerProfile.getName(),response.getName());
-		assertEquals(customerProfile.getSurname(),response.getSurname());
-		assertEquals(ACCOUNT_NUMBER,response.getAccountNumber());
-		assertEquals(BigDecimal.ZERO,response.getBalance());
-		assertEquals(accountRequest.getCurrency(),response.getCurrency());
-		assertEquals(AccountStatus.ACTIVE,response.getStatus());
+		assertEquals(customerProfile.getName(), response.getName());
+		assertEquals(customerProfile.getSurname(), response.getSurname());
+		assertEquals(ACCOUNT_NUMBER, response.getAccountNumber());
+		assertEquals(BigDecimal.ZERO, response.getBalance());
+		assertEquals(accountRequest.getCurrency(), response.getCurrency());
+		assertEquals(AccountStatus.ACTIVE, response.getStatus());
 
 		verify(userService, times(1)).getUserById(authenticatedUser.getUserId());
 		verify(userProfileService, times(1)).getProfileEntity(authenticatedUser.getUserId());
@@ -149,11 +149,11 @@ public class AccountServiceTest {
 		AccountEntity notOwningAccount = new AccountEntity();
 		notOwningAccount.setOwner(owner);
 
-		assertThatThrownBy(() -> accountService.viewAccountDetails(authenticatedUser,ACCOUNT_ID))
-		.isInstanceOf(AccountNotFoundException.class)
+		assertThatThrownBy(() -> accountService.viewAccountDetails(authenticatedUser, ACCOUNT_ID))
+				.isInstanceOf(AccountNotFoundException.class)
 				.hasMessage("Account with id " + ACCOUNT_ID + " not found");
 
-		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
+		verify(accountRepository, times(1)).findById(ACCOUNT_ID);
 
 	}
 
@@ -163,24 +163,24 @@ public class AccountServiceTest {
 		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
 
 		AccountEntity firstAccount = new AccountEntity();
-		setAccountValues(firstAccount,loggedInCustomer,new AccountRequest(Currency.EUR));
+		setAccountValues(firstAccount, loggedInCustomer, new AccountRequest(Currency.EUR));
 		firstAccount.setId((1L));
 		AccountEntity secondAccount = new AccountEntity();
-		setAccountValues(secondAccount,loggedInCustomer,new AccountRequest(Currency.GBP));
+		setAccountValues(secondAccount, loggedInCustomer, new AccountRequest(Currency.GBP));
 		secondAccount.setId((2L));
 
 		when(userService.getUserById(authenticatedUser.getUserId())).thenReturn(loggedInCustomer);
-		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(List.of(firstAccount,secondAccount));
+		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(List.of(firstAccount, secondAccount));
 		List<AccountResponse> accounts = accountService.viewAllAccountsByUser(authenticatedUser);
 
 		assertEquals(2, accounts.size());
-		assertEquals(1L,accounts.get(0).getId());
-		assertEquals(2L,accounts.get(1).getId());
-		assertEquals(Currency.EUR,accounts.get(0).getCurrency());
-		assertEquals(Currency.GBP,accounts.get(1).getCurrency());
+		assertEquals(1L, accounts.get(0).getId());
+		assertEquals(2L, accounts.get(1).getId());
+		assertEquals(Currency.EUR, accounts.get(0).getCurrency());
+		assertEquals(Currency.GBP, accounts.get(1).getCurrency());
 
-		verify(accountRepository,times(1)).findByOwner(loggedInCustomer);
-		verify(userService,times(1)).getUserById(authenticatedUser.getUserId());
+		verify(accountRepository, times(1)).findByOwner(loggedInCustomer);
+		verify(userService, times(1)).getUserById(authenticatedUser.getUserId());
 	}
 
 	@Test
@@ -193,9 +193,9 @@ public class AccountServiceTest {
 		);
 		List<AccountResponse> accounts = accountService.viewAllAccountsByUser(authenticatedUser);
 
-		assertEquals(0,accounts.size());
-		verify(accountRepository,times(1)).findByOwner(loggedInCustomer);
-		verify(userService,times(1)).getUserById(authenticatedUser.getUserId());
+		assertEquals(0, accounts.size());
+		verify(accountRepository, times(1)).findByOwner(loggedInCustomer);
+		verify(userService, times(1)).getUserById(authenticatedUser.getUserId());
 
 	}
 
@@ -204,14 +204,14 @@ public class AccountServiceTest {
 		AccountStatusRequest accountStatusRequest = new AccountStatusRequest(AccountStatus.BLOCKED);
 		AccountEntity accountToUpdate = new AccountEntity();
 		UserEntity owner = returnUserEntity();
-		setAccountValues(accountToUpdate,owner,new AccountRequest(Currency.EUR));
+		setAccountValues(accountToUpdate, owner, new AccountRequest(Currency.EUR));
 
 		when(accountRepository.findById(accountToUpdate.getId())).thenReturn(Optional.of(accountToUpdate));
 
-		accountService.changeAccountStatus(accountToUpdate.getId(),accountStatusRequest);
+		accountService.changeAccountStatus(accountToUpdate.getId(), accountStatusRequest);
 
-		assertEquals(AccountStatus.BLOCKED,accountToUpdate.getStatus());
-		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
+		assertEquals(AccountStatus.BLOCKED, accountToUpdate.getStatus());
+		verify(accountRepository, times(1)).findById(ACCOUNT_ID);
 
 
 	}
@@ -223,18 +223,18 @@ public class AccountServiceTest {
 		UserEntity owner = returnUserEntity();
 
 		//invalid transition from active to closed
-		setAccountValues(accountToUpdate,owner,new AccountRequest(Currency.EUR));
+		setAccountValues(accountToUpdate, owner, new AccountRequest(Currency.EUR));
 
 		when(accountRepository.findById(accountToUpdate.getId())).thenReturn(Optional.of(accountToUpdate));
 
-		assertThatThrownBy(() -> accountService.changeAccountStatus(accountToUpdate.getId(),accountStatusRequest))
+		assertThatThrownBy(() -> accountService.changeAccountStatus(accountToUpdate.getId(), accountStatusRequest))
 				.isInstanceOf(AccountInvalidStatusTransitionException.class)
 				.hasMessage("Invalid status transition from " + accountToUpdate.getStatus() + " to " + accountStatusRequest.getStatus());
 
-		verify(accountRepository,times(1)).findById(ACCOUNT_ID);
-		verify(accountRepository,never()).saveAndFlush(accountToUpdate);
+		verify(accountRepository, times(1)).findById(ACCOUNT_ID);
+		verify(accountRepository, never()).saveAndFlush(accountToUpdate);
 
-		assertEquals(AccountStatus.ACTIVE,accountToUpdate.getStatus());
+		assertEquals(AccountStatus.ACTIVE, accountToUpdate.getStatus());
 
 	}
 
@@ -245,19 +245,19 @@ public class AccountServiceTest {
 		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
 		AccountEntity accountToClose = new AccountEntity();
 
-		setAccountValues(accountToClose,loggedInCustomer,new AccountRequest(Currency.EUR));
+		setAccountValues(accountToClose, loggedInCustomer, new AccountRequest(Currency.EUR));
 		accountToClose.setBalance(BigDecimal.ZERO);
 
 		when(accountRepository.findById(accountIdToClose)).thenReturn(Optional.of(accountToClose));
 
-		AccountClosureResponse response = accountService.closeAccount(authenticatedUser,accountIdToClose);
+		AccountClosureResponse response = accountService.closeAccount(authenticatedUser, accountIdToClose);
 
-		assertEquals(accountIdToClose,response.getAccountId());
-		assertEquals(accountToClose.getAccountNumber(),response.getAccountNumber());
-		assertEquals(AccountStatus.CLOSED,accountToClose.getStatus());
+		assertEquals(accountIdToClose, response.getAccountId());
+		assertEquals(accountToClose.getAccountNumber(), response.getAccountNumber());
+		assertEquals(AccountStatus.CLOSED, accountToClose.getStatus());
 
-		verify(accountRepository,times(1)).findById(accountIdToClose);
-		verify(accountRepository,times(1)).saveAndFlush(accountToClose);
+		verify(accountRepository, times(1)).findById(accountIdToClose);
+		verify(accountRepository, times(1)).saveAndFlush(accountToClose);
 
 	}
 
@@ -275,17 +275,17 @@ public class AccountServiceTest {
 
 		when(accountRepository.findById(accountIdToClose)).thenReturn(Optional.of(accountToClose));
 
-		assertThatThrownBy(() -> accountService.closeAccount(authenticatedUser,accountIdToClose))
-		.isInstanceOf(AccountClosureFailedException.class)
+		assertThatThrownBy(() -> accountService.closeAccount(authenticatedUser, accountIdToClose))
+				.isInstanceOf(AccountClosureFailedException.class)
 				.hasMessage("Account with id " + accountIdToClose
 						+ " cannot be closed. Current status: " + accountToClose.getStatus()
 						+ ", current balance: " + accountToClose.getBalance()
 						+ ". Account must be ACTIVE and have zero balance.");
 
-		verify(accountRepository,times(1)).findById(accountIdToClose);
-		verify(accountRepository,never()).saveAndFlush(accountToClose);
+		verify(accountRepository, times(1)).findById(accountIdToClose);
+		verify(accountRepository, never()).saveAndFlush(accountToClose);
 
-		assertEquals(AccountStatus.ACTIVE,accountToClose.getStatus());
+		assertEquals(AccountStatus.ACTIVE, accountToClose.getStatus());
 
 	}
 }
