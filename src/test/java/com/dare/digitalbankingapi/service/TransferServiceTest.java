@@ -4,6 +4,7 @@ import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
+import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
@@ -14,6 +15,7 @@ import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.entity.TransferStatus;
+import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
@@ -29,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
@@ -62,13 +65,13 @@ public class TransferServiceTest {
 	//Helper
 	private UserProfileEntity returnUserProfileEntity() {
 		return new UserProfileEntity(
-				returnUserEntity(),
+				returnFromUserEntity(),
 				"testName", "testSurName", "testStreet",
 				"99", "testCity", "testZipCode", "testCountry"
 		);
 	}
 
-	private UserEntity returnUserEntity() {
+	private UserEntity returnFromUserEntity() {
 		UserEntity customer = new UserEntity(
 				"testEmail@mail.com",
 				"passwordHash",
@@ -80,18 +83,35 @@ public class TransferServiceTest {
 
 	}
 
+	private UserEntity returnToUserEntity() {
+		UserEntity customer = new UserEntity(
+				"testEmail@mail.com",
+				"passwordHash",
+				UserRole.CUSTOMER
+		);
+
+		customer.setId(2L);
+		return customer;
+
+	}
+
 	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
 		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
 	}
 
-	private void setAccountValues(AccountEntity accountEntity, Long accountId, String accountNumber,
-								  UserEntity userEntity, AccountRequest accountRequest) {
+	private AccountEntity setAccountValues(Long accountId, String accountNumber,
+								 	 UserEntity userEntity) {
+
+		AccountEntity accountEntity = new AccountEntity();
+
 		accountEntity.setId(accountId);
 		accountEntity.setOwner(userEntity);
 		accountEntity.setAccountNumber(accountNumber);
-		accountEntity.setCurrency(accountRequest.getCurrency());
+		accountEntity.setCurrency(Currency.EUR);
 		accountEntity.setStatus(AccountStatus.ACTIVE);
 		accountEntity.setCreatedAt(LocalDateTime.now());
+
+		return accountEntity;
 
 
 	}
@@ -106,32 +126,13 @@ public class TransferServiceTest {
 		BigDecimal amount = new BigDecimal("100");
 		String referenceNumber = "referenceNumber";
 
-		UserEntity fromUser = returnUserEntity();
-		UserEntity toUser = returnUserEntity();
-		toUser.setId(2L);
+		UserEntity fromUser = returnFromUserEntity();
+		UserEntity toUser = returnToUserEntity();
 
-		AccountEntity fromAccount = new AccountEntity();
-		setAccountValues(
-				fromAccount,
-				fromAccountId,
-				"fromAccountNumber",
-				fromUser,
-				new AccountRequest(Currency.EUR)
-		);
-		fromAccount.setId(fromAccountId);
-		fromAccount.setOwner(fromUser);
+		AccountEntity fromAccount = setAccountValues(fromAccountId,"fromAccountNumber", fromUser);
 		fromAccount.setBalance(new BigDecimal("1000"));
 
-		AccountEntity toAccount = new AccountEntity();
-		setAccountValues(
-				toAccount,
-				toAccountId,
-				"toAccountNumber",
-				toUser,
-				new AccountRequest(Currency.EUR)
-		);
-		toAccount.setId(toAccountId);
-		toAccount.setOwner(toUser);
+		AccountEntity toAccount = setAccountValues(toAccountId,"toAccountNumber",toUser);
 		toAccount.setBalance(new BigDecimal("100"));
 
 		AuthenticatedUser loggedInUser = returnAuthenticatedUser(fromUser);
@@ -235,6 +236,110 @@ public class TransferServiceTest {
 				any(TransferEntity.class),
 				eq(TransactionType.TRANSFER_IN)
 		);
+	}
+
+	@Test
+	public void createTransferBetweenAccountsTest_whenBalanceIsInsufficient_throwsInsufficientBalanceException() throws Exception {
+
+		Long fromAccountId = 1L;
+		Long toAccountId = 2L;
+
+		BigDecimal amount = new BigDecimal("2000");
+		String referenceNumber = "referenceNumber";
+
+		UserEntity fromUser = returnFromUserEntity();
+		UserEntity toUser = returnToUserEntity();
+
+		AccountEntity fromAccount = setAccountValues(fromAccountId,"fromAccountNumber", fromUser);
+		fromAccount.setBalance(new BigDecimal("1000"));
+
+		AccountEntity toAccount = setAccountValues(toAccountId,"toAccountNumber",toUser);
+		toAccount.setBalance(new BigDecimal("100"));
+
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(fromUser);
+
+		TransferRequest transferRequest = new TransferRequest(
+				fromAccountId,
+				toAccountId,
+				amount,
+				referenceNumber
+		);
+
+
+		when(accountService.getAccount(fromAccountId)).thenReturn(fromAccount);
+		when(accountService.getAccount(toAccountId)).thenReturn(toAccount);
+		when(accountService.userIsOwner(fromAccount, loggedInUser)).thenReturn(true);
+
+		assertThatThrownBy( () -> transferService.createTransferBetweenAccounts(loggedInUser, transferRequest))
+				.isInstanceOf(InsufficientBalanceException.class)
+				.hasMessage("Account has insufficient balance for the requested transfer");
+
+		assertEquals(BigDecimal.valueOf(Long.parseLong("1000")), fromAccount.getBalance());
+		assertEquals(BigDecimal.valueOf(Long.parseLong("100")), toAccount.getBalance());
+
+		verify(accountService).userIsOwner(fromAccount, loggedInUser);
+		verify(accountService).checkAccountStatus(fromAccount);
+		verify(accountService).checkAccountStatus(toAccount);
+		verify(accountService,never()).updateBalance(any(), any(), any());
+		verify(transferRepository,never()).saveAndFlush(any(TransferEntity.class));
+		verify(transactionService,never()).createTransferTransaction(any(),any(),any(),any());
+
+
+
+	}
+
+	@Test
+	public void createTransferBetweenAccountsTest_whenAccountIsInactive_throwsAccountOperationNotAllowedException() throws Exception {
+		Long fromAccountId = 1L;
+		Long toAccountId = 2L;
+
+		BigDecimal amount = new BigDecimal("100");
+		String referenceNumber = "referenceNumber";
+
+		UserEntity fromUser = returnFromUserEntity();
+		UserEntity toUser = returnToUserEntity();
+
+		AccountEntity fromAccount = setAccountValues(fromAccountId,"fromAccountNumber", fromUser);
+		fromAccount.setBalance(new BigDecimal("1000"));
+
+		AccountEntity toAccount = setAccountValues(toAccountId,"toAccountNumber",toUser);
+		toAccount.setBalance(new BigDecimal("100"));
+		toAccount.setStatus(AccountStatus.CLOSED);
+
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(fromUser);
+
+		TransferRequest transferRequest = new TransferRequest(
+				fromAccountId,
+				toAccountId,
+				amount,
+				referenceNumber
+		);
+
+
+		when(accountService.getAccount(fromAccountId)).thenReturn(fromAccount);
+		when(accountService.getAccount(toAccountId)).thenReturn(toAccount);
+		when(accountService.userIsOwner(fromAccount, loggedInUser)).thenReturn(true);
+
+		doNothing().when(accountService).checkAccountStatus(fromAccount);
+
+		doThrow(new AccountOperationNotAllowedException(toAccountId, AccountStatus.CLOSED))
+				.when(accountService).checkAccountStatus(toAccount);
+
+		assertThatThrownBy(() -> transferService.createTransferBetweenAccounts(loggedInUser, transferRequest))
+				.isInstanceOf(AccountOperationNotAllowedException.class)
+				.hasMessage("Operation not allowed for account with id " + toAccountId + ". Current status: " + AccountStatus.CLOSED);
+
+		assertEquals(BigDecimal.valueOf(Long.parseLong("1000")), fromAccount.getBalance());
+		assertEquals(BigDecimal.valueOf(Long.parseLong("100")), toAccount.getBalance());
+
+		verify(accountService).userIsOwner(fromAccount, loggedInUser);
+		verify(accountService).checkAccountStatus(fromAccount);
+		verify(accountService).checkAccountStatus(toAccount);
+		verify(accountService,never()).updateBalance(any(), any(), any());
+		verify(transferRepository,never()).saveAndFlush(any(TransferEntity.class));
+		verify(transactionService,never()).createTransferTransaction(any(),any(),any(),any());
+
+
 	}
 
 
