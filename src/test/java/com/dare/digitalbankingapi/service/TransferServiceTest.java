@@ -16,6 +16,7 @@ import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
 import com.dare.digitalbankingapi.transfer.entity.TransferEntity;
 import com.dare.digitalbankingapi.transfer.entity.TransferStatus;
 import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
+import com.dare.digitalbankingapi.transfer.exceptions.SameAccountTransferException;
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
@@ -63,14 +64,6 @@ public class TransferServiceTest {
 	}
 
 	//Helper
-	private UserProfileEntity returnUserProfileEntity() {
-		return new UserProfileEntity(
-				returnFromUserEntity(),
-				"testName", "testSurName", "testStreet",
-				"99", "testCity", "testZipCode", "testCountry"
-		);
-	}
-
 	private UserEntity returnFromUserEntity() {
 		UserEntity customer = new UserEntity(
 				"testEmail@mail.com",
@@ -239,7 +232,7 @@ public class TransferServiceTest {
 	}
 
 	@Test
-	public void createTransferBetweenAccountsTest_whenBalanceIsInsufficient_throwsInsufficientBalanceException() throws Exception {
+	public void createTransferBetweenAccountsTest_whenBalanceIsInsufficient_throwsInsufficientBalanceException() {
 
 		Long fromAccountId = 1L;
 		Long toAccountId = 2L;
@@ -289,7 +282,7 @@ public class TransferServiceTest {
 	}
 
 	@Test
-	public void createTransferBetweenAccountsTest_whenAccountIsInactive_throwsAccountOperationNotAllowedException() throws Exception {
+	public void createTransferBetweenAccountsTest_whenAccountIsInactive_throwsAccountOperationNotAllowedException() {
 		Long fromAccountId = 1L;
 		Long toAccountId = 2L;
 
@@ -335,6 +328,47 @@ public class TransferServiceTest {
 		verify(accountService).userIsOwner(fromAccount, loggedInUser);
 		verify(accountService).checkAccountStatus(fromAccount);
 		verify(accountService).checkAccountStatus(toAccount);
+		verify(accountService,never()).updateBalance(any(), any(), any());
+		verify(transferRepository,never()).saveAndFlush(any(TransferEntity.class));
+		verify(transactionService,never()).createTransferTransaction(any(),any(),any(),any());
+
+
+	}
+
+	@Test
+	public void createTransferBetweenAccountsTest_whenTransferBetweenSameAccountsIsRequested_throwsSameAccountTransferException() {
+		Long accountId = 1L;
+
+		BigDecimal amount = new BigDecimal("100");
+		String referenceNumber = "referenceNumber";
+
+		UserEntity user = returnFromUserEntity();
+
+		AccountEntity account = setAccountValues(accountId,"fromAccountNumber", user);
+		account.setBalance(new BigDecimal("1000"));
+
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(user);
+
+		TransferRequest transferRequest = new TransferRequest(
+				accountId,
+				accountId,
+				amount,
+				referenceNumber
+		);
+
+
+		when(accountService.getAccount(accountId)).thenReturn(account);
+		when(accountService.userIsOwner(account, loggedInUser)).thenReturn(true);
+
+		assertThatThrownBy(() -> transferService.createTransferBetweenAccounts(loggedInUser, transferRequest))
+				.isInstanceOf(SameAccountTransferException.class)
+				.hasMessage("Transfer to the same account is not allowed");
+
+		assertEquals(BigDecimal.valueOf(Long.parseLong("1000")), account.getBalance());
+
+		verify(accountService,times(2)).getAccount(accountId);
+		verify(accountService).userIsOwner(account, loggedInUser);
+		verify(accountService,never()).checkAccountStatus(account);
 		verify(accountService,never()).updateBalance(any(), any(), any());
 		verify(transferRepository,never()).saveAndFlush(any(TransferEntity.class));
 		verify(transactionService,never()).createTransferTransaction(any(),any(),any(),any());
