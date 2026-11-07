@@ -1,6 +1,5 @@
 package com.dare.digitalbankingapi.service;
 
-import com.dare.digitalbankingapi.account.dto.AccountRequest;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
@@ -20,7 +19,6 @@ import com.dare.digitalbankingapi.transfer.exceptions.SameAccountTransferExcepti
 import com.dare.digitalbankingapi.transfer.repository.TransferRepository;
 import com.dare.digitalbankingapi.transfer.service.TransferService;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
-import com.dare.digitalbankingapi.user.entity.UserProfileEntity;
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
