@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -372,6 +373,48 @@ public class TransferServiceTest {
 		verify(transactionService,never()).createTransferTransaction(any(),any(),any(),any());
 
 
+	}
+
+	@Test
+	public void viewTransferDetails_whenTransferIsFoundAndUserIsOwner_returnsTransferDetails() {
+		Long transferId = 1L;
+
+		Long fromAccountId = 1L;
+		UserEntity user = returnFromUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(user);
+		AccountEntity fromAccount = setAccountValues(fromAccountId,"fromAccountNumber",user);
+
+		UserEntity toUser = returnFromUserEntity();
+		toUser.setId(2L);
+
+		AccountEntity toAccount = setAccountValues(2L,"toAccountNumber",toUser);
+		BigDecimal amount = new BigDecimal("1000");
+
+		TransferEntity transfer = new TransferEntity(fromAccount,toAccount,amount,Currency.EUR);
+		transfer.setId(transferId);
+
+		TransactionEntity transaction = new TransactionEntity(
+				fromAccount,
+				amount,
+				"reference",
+				TransactionType.TRANSFER_OUT,
+				BigDecimal.valueOf(500),
+				transfer
+				);
+
+		when(transferRepository.findById(transferId)).thenReturn(Optional.of(transfer));
+		when(transactionService.getTransactionByTransferId(transferId)).thenReturn(transaction);
+
+		TransferResponse response = transferService.viewTransferDetails(loggedInUser,transferId);
+
+		assertEquals(fromAccountId,response.getFromAccountId());
+		assertEquals(toAccount.getId(),response.getToAccountId());
+		assertEquals(transfer.getId(),response.getTransferId());
+		assertEquals(transfer.getAmount(), response.getAmount());
+		assertEquals(transaction.getReference(),response.getReference());
+
+		verify(transferRepository).findById(transferId);
+		verify(transactionService).getTransactionByTransferId(transferId);
 	}
 
 
