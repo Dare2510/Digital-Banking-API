@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -105,6 +106,20 @@ public class TransferServiceTest {
 
 		return accountEntity;
 
+
+	}
+
+	private TransactionEntity returnTransaction(AccountEntity account,
+												String reference, BigDecimal amount, TransferEntity transfer) {
+
+		return new TransactionEntity(
+				account,
+				amount,
+				reference,
+				TransactionType.TRANSFER_OUT,
+				account.getBalance().subtract(amount),
+				transfer
+		);
 
 	}
 
@@ -363,7 +378,7 @@ public class TransferServiceTest {
 				.isInstanceOf(SameAccountTransferException.class)
 				.hasMessage("Transfer to the same account is not allowed");
 
-		assertEquals(BigDecimal.valueOf(Long.parseLong("1000")), account.getBalance());
+		assertEquals(BigDecimal.valueOf(1000), account.getBalance());
 
 		verify(accountService,times(2)).getAccount(accountId);
 		verify(accountService).userIsOwner(account, loggedInUser);
@@ -383,6 +398,7 @@ public class TransferServiceTest {
 		UserEntity user = returnFromUserEntity();
 		AuthenticatedUser loggedInUser = returnAuthenticatedUser(user);
 		AccountEntity fromAccount = setAccountValues(fromAccountId,"fromAccountNumber",user);
+		fromAccount.setBalance(new BigDecimal("1500"));
 
 		UserEntity toUser = returnFromUserEntity();
 		toUser.setId(2L);
@@ -393,14 +409,7 @@ public class TransferServiceTest {
 		TransferEntity transfer = new TransferEntity(fromAccount,toAccount,amount,Currency.EUR);
 		transfer.setId(transferId);
 
-		TransactionEntity transaction = new TransactionEntity(
-				fromAccount,
-				amount,
-				"reference",
-				TransactionType.TRANSFER_OUT,
-				BigDecimal.valueOf(500),
-				transfer
-				);
+		TransactionEntity transaction = returnTransaction(fromAccount,"reference",amount,transfer);
 
 		when(transferRepository.findById(transferId)).thenReturn(Optional.of(transfer));
 		when(transactionService.getTransactionByTransferId(transferId)).thenReturn(transaction);
@@ -415,6 +424,56 @@ public class TransferServiceTest {
 
 		verify(transferRepository).findById(transferId);
 		verify(transactionService).getTransactionByTransferId(transferId);
+	}
+
+	@Test
+	public void findTransfersByAccountId_whenAccountHasMultipleTransfers_returnsListOfTransfersResponses() {
+		Long accountId = 1L;
+		List<Long> transferIds = List.of(1L,2L);
+
+		UserEntity user = returnFromUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(user);
+		AccountEntity fromAccount = setAccountValues(accountId,"fromAccountNumber",user);
+		fromAccount.setBalance(new BigDecimal("2000"));
+
+		UserEntity toUser = returnFromUserEntity();
+		toUser.setId(2L);
+
+		AccountEntity toAccount = setAccountValues(2L,"toAccountNumber",toUser);
+		BigDecimal firstAmount = new BigDecimal("1000");
+		BigDecimal secondAmount = new BigDecimal("500");
+
+		TransferEntity firstTransfer = new TransferEntity(fromAccount,toAccount, firstAmount,Currency.EUR);
+		firstTransfer.setId(transferIds.get(0));
+
+		TransferEntity secondTransfer = new TransferEntity(fromAccount,toAccount, firstAmount,Currency.EUR);
+		firstTransfer.setId(transferIds.get(1));
+
+		TransactionEntity firstTransaction = returnTransaction(fromAccount,"firstReference",firstAmount,firstTransfer);
+		TransactionEntity secondTransaction = returnTransaction(fromAccount,"secondReference",secondAmount,secondTransfer);
+
+		when(accountService.getAccount(accountId)).thenReturn(fromAccount);
+		when(accountService.userIsOwner(fromAccount, loggedInUser)).thenReturn(true);
+		when(transferRepository.findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId,accountId))
+				.thenReturn(List.of(firstTransfer,secondTransfer));
+		when(transactionService.getTransactionByTransferId(firstTransfer.getId())).thenReturn(firstTransaction);
+		when(transactionService.getTransactionByTransferId(secondTransfer.getId())).thenReturn(secondTransaction);
+
+		List<TransferResponse> responses= transferService.findByAccountId(loggedInUser,accountId);
+
+		assertEquals(2,responses.size());
+		assertEquals(firstTransfer.getId(),responses.get(0).getTransferId());
+		assertEquals(secondTransfer.getId(),responses.get(1).getTransferId());
+		assertEquals(firstTransfer.getAmount(),responses.get(0).getAmount());
+		assertEquals(secondTransfer.getAmount(),responses.get(1).getAmount());
+		assertEquals(firstTransaction.getReference(),responses.get(0).getReference());
+		assertEquals(secondTransaction.getReference(),responses.get(1).getReference());
+
+		verify(accountService,times(1)).userIsOwner(fromAccount, loggedInUser);
+		verify(transferRepository).findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId,accountId);
+		verify(transactionService,times(1)).getTransactionByTransferId(firstTransfer.getId());
+
+
 	}
 
 
