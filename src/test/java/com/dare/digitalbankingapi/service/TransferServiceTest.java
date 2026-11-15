@@ -9,6 +9,7 @@ import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
+import com.dare.digitalbankingapi.transaction.exceptions.TransactionNotFoundException;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
 import com.dare.digitalbankingapi.transfer.dto.TransferRequest;
 import com.dare.digitalbankingapi.transfer.dto.TransferResponse;
@@ -29,12 +30,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -472,6 +473,34 @@ public class TransferServiceTest {
 		verify(accountService,times(1)).userIsOwner(fromAccount, loggedInUser);
 		verify(transferRepository).findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId,accountId);
 		verify(transactionService,times(1)).getTransactionByTransferId(firstTransfer.getId());
+
+
+	}
+
+	@Test
+	public void findTransfersByAccountId_whenAccountHasNoTransfers_returnsEmptyList() {
+		Long accountId = 1L;
+
+		UserEntity user = returnFromUserEntity();
+		AuthenticatedUser loggedInUser = returnAuthenticatedUser(user);
+		AccountEntity fromAccount = setAccountValues(accountId,"fromAccountNumber",user);
+
+		when(accountService.getAccount(accountId)).thenReturn(fromAccount);
+		when(accountService.userIsOwner(fromAccount, loggedInUser)).thenReturn(true);
+		when(transferRepository.findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId,accountId))
+				.thenReturn(Collections.emptyList());
+
+		List<TransferResponse> responses= transferService.findByAccountId(loggedInUser,accountId);
+
+		assertEquals(0,responses.size());;
+
+		verify(accountService,times(1)).getAccount(accountId);
+		verify(accountService,times(1)).userIsOwner(fromAccount, loggedInUser);
+		verify(transferRepository,times(1)).findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId,accountId);
+		verify(transactionService,never()).getTransactionByTransferId(anyLong());
+
+
+
 
 
 	}
