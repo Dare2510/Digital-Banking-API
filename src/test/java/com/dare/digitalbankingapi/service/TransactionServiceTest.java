@@ -13,6 +13,7 @@ import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
 import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.transaction.service.TransactionService;
+import com.dare.digitalbankingapi.transfer.exceptions.InsufficientBalanceException;
 import com.dare.digitalbankingapi.user.entity.UserEntity;
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -184,5 +185,31 @@ public class TransactionServiceTest {
 		verify(accountService,times(1)).checkAccountStatus(account);
 		verify(accountService,times(1)).updateBalance(any(),any(),any());
 		verify(transactionRepository,times(1)).saveAndFlush(any(TransactionEntity.class));
+	}
+
+	@Test
+	public void withdrawTest_whenBalanceIsInsufficient_throwsInsufficientBalanceException() {
+		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(1000));
+		UserEntity loggedInCustomer = returnToUserEntity();
+		AuthenticatedUser authenticatedCostumer = returnToAuthenticatedUser(loggedInCustomer);
+		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		account.setBalance(BigDecimal.valueOf(500));
+
+		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
+
+		assertThatThrownBy( () -> transactionService.withdraw(authenticatedCostumer, request))
+		.isInstanceOf(InsufficientBalanceException.class)
+				.hasMessage("Account has insufficient balance for the requested withdrawal");
+
+		assertEquals(BigDecimal.valueOf(500), account.getBalance());
+
+		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
+		verify(accountService,times(1)).checkAccountStatus(account);
+		verify(accountService,never()).updateBalance(any(),any(),any());
+		verify(transactionRepository,never()).saveAndFlush(any(TransactionEntity.class));
+
+
 	}
 }
