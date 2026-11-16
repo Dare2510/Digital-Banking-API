@@ -189,8 +189,8 @@ public class AccountServiceTest {
 		AuthenticatedUser authenticatedUser = returnAuthenticatedUser(loggedInCustomer);
 
 		when(userService.getUserById(authenticatedUser.getUserId())).thenReturn(loggedInCustomer);
-		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(Collections.emptyList()
-		);
+		when(accountRepository.findByOwner(loggedInCustomer)).thenReturn(Collections.emptyList());
+
 		List<AccountResponse> accounts = accountService.viewAllAccountsByUser(authenticatedUser);
 
 		assertEquals(0, accounts.size());

@@ -47,14 +47,13 @@ public class TransactionServiceTest {
 
 	//Helper
 
-	private AccountEntity setAccountValues(Long accountId, String accountNumber,
-										   UserEntity userEntity) {
+	private AccountEntity setAccountValues() {
 
 		AccountEntity accountEntity = new AccountEntity();
 
-		accountEntity.setId(accountId);
-		accountEntity.setOwner(userEntity);
-		accountEntity.setAccountNumber(accountNumber);
+		accountEntity.setId(1L);
+		accountEntity.setOwner(returnUserEntity());
+		accountEntity.setAccountNumber("accountNumber");
 		accountEntity.setCurrency(Currency.EUR);
 		accountEntity.setStatus(AccountStatus.ACTIVE);
 		accountEntity.setCreatedAt(LocalDateTime.now());
@@ -64,19 +63,19 @@ public class TransactionServiceTest {
 
 	}
 
-	private UserEntity returnToUserEntity() {
+	private UserEntity returnUserEntity() {
 		UserEntity customer = new UserEntity(
 				"testEmail@mail.com",
 				"passwordHash",
 				UserRole.CUSTOMER
 		);
 
-		customer.setId(2L);
+		customer.setId(1L);
 		return customer;
 
 	}
 
-	private AuthenticatedUser returnToAuthenticatedUser(UserEntity user) {
+	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
 		return new AuthenticatedUser(
 				user.getId(),
 				user.getEmail(),
@@ -91,33 +90,32 @@ public class TransactionServiceTest {
 
 	@Test
 	void depositTest_whenRequestIsValid_returnsTransactionResponse() {
-		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(500));
-		UserEntity loggedInCustomer = returnToUserEntity();
-		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		TransactionRequest depositRequest = new TransactionRequest(1L, BigDecimal.valueOf(500));
+		AccountEntity account = setAccountValues();
 		account.setBalance(BigDecimal.valueOf(500));
 
-		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		when(accountService.getAccount(depositRequest.getAccountId())).thenReturn(account);
 
 		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
 				.thenAnswer(invocation -> {
 						TransactionEntity transaction = invocation.getArgument(0);
 						transaction.setAccount(account);
-						transaction.setAmount(request.getAmount());
+						transaction.setAmount(depositRequest.getAmount());
 						transaction.setType(TransactionType.DEPOSIT);
-						transaction.setBalanceAfter(account.getBalance().add(request.getAmount()));
+						transaction.setBalanceAfter(account.getBalance().add(depositRequest.getAmount()));
 						transaction.setCreatedAt(LocalDateTime.now());
 						transaction.setId(1L);
 
-						account.setBalance(account.getBalance().add(request.getAmount()));
+						account.setBalance(account.getBalance().add(depositRequest.getAmount()));
 
 						return transaction;
 				});
 
-		TransactionResponse response = transactionService.deposit(request);
+		TransactionResponse depositResponse = transactionService.deposit(depositRequest);
 
-		assertEquals(request.getAccountId(),response.getFromAccountId());
-		assertEquals(request.getAmount(),response.getAmount());
-		assertEquals(account.getBalance(), response.getBalanceAfter());
+		assertEquals(depositRequest.getAccountId(),depositResponse.getFromAccountId());
+		assertEquals(depositRequest.getAmount(),depositResponse.getAmount());
+		assertEquals(account.getBalance(), depositResponse.getBalanceAfter());
 
 		verify(accountService,times(1)).getAccount(1L);
 		verify(accountService,times(1)).updateBalance(any(),any(),any());
@@ -128,23 +126,22 @@ public class TransactionServiceTest {
 
 	@Test
 	public void depositTest_whenAccountStatusIsNotValid_throwsAccountOperationNotAllowedException() {
-		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(500));
-		UserEntity loggedInCustomer = returnToUserEntity();
-		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		TransactionRequest depositRequest = new TransactionRequest(1L, BigDecimal.valueOf(500));
+		AccountEntity account = setAccountValues();
 		account.setBalance(BigDecimal.valueOf(500));
 		account.setStatus(AccountStatus.CLOSED);
 
-		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		when(accountService.getAccount(depositRequest.getAccountId())).thenReturn(account);
 
 		doThrow(new AccountOperationNotAllowedException(account.getId(), account.getStatus()))
 				.when(accountService).checkAccountStatus(account);
 
-		assertThatThrownBy( () ->  transactionService.deposit(request))
+		assertThatThrownBy( () ->  transactionService.deposit(depositRequest))
 		.isInstanceOf(AccountOperationNotAllowedException.class)
-				.hasMessage("Operation not allowed for account with id " + request.getAccountId() +
+				.hasMessage("Operation not allowed for account with id " + depositRequest.getAccountId() +
 						". Current status: " + account.getStatus());
 
-		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(accountService,times(1)).getAccount(depositRequest.getAccountId());
 		verify(transactionRepository,never()).saveAndFlush(any(TransactionEntity.class));
 
 		assertEquals(BigDecimal.valueOf(500), account.getBalance());
@@ -153,13 +150,12 @@ public class TransactionServiceTest {
 
 	@Test
 	public void withdrawTest_whenRequestIsValid_returnsTransactionResponse() {
-		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(1000));
-		UserEntity loggedInCustomer = returnToUserEntity();
-		AuthenticatedUser authenticatedCostumer = returnToAuthenticatedUser(loggedInCustomer);
-		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		TransactionRequest withdrawalRequest = new TransactionRequest(1L, BigDecimal.valueOf(1000));
+		AccountEntity account = setAccountValues();
+		AuthenticatedUser authenticatedCostumer = returnAuthenticatedUser(account.getOwner());
 		account.setBalance(BigDecimal.valueOf(5000));
 
-		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		when(accountService.getAccount(withdrawalRequest.getAccountId())).thenReturn(account);
 		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
 
 		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
@@ -167,20 +163,20 @@ public class TransactionServiceTest {
 					TransactionEntity transaction = invocation.getArgument(0);
 					transaction.setId(1L);
 					transaction.setAccount(account);
-					transaction.setAmount(request.getAmount());
+					transaction.setAmount(withdrawalRequest.getAmount());
 					transaction.setType(TransactionType.WITHDRAW);
-					transaction.setBalanceAfter(account.getBalance().subtract(request.getAmount()));
-					account.setBalance(account.getBalance().subtract(request.getAmount()));
+					transaction.setBalanceAfter(account.getBalance().subtract(withdrawalRequest.getAmount()));
+					account.setBalance(account.getBalance().subtract(withdrawalRequest.getAmount()));
 					return transaction;
 				});
 
-		TransactionResponse response = transactionService.withdraw(authenticatedCostumer, request);
+		TransactionResponse response = transactionService.withdraw(authenticatedCostumer, withdrawalRequest);
 
-		assertEquals(request.getAccountId(),response.getFromAccountId());
-		assertEquals(request.getAmount(),response.getAmount());
+		assertEquals(withdrawalRequest.getAccountId(),response.getFromAccountId());
+		assertEquals(withdrawalRequest.getAmount(),response.getAmount());
 		assertEquals(account.getBalance(), response.getBalanceAfter());
 
-		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(accountService,times(1)).getAccount(withdrawalRequest.getAccountId());
 		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
 		verify(accountService,times(1)).checkAccountStatus(account);
 		verify(accountService,times(1)).updateBalance(any(),any(),any());
@@ -189,22 +185,22 @@ public class TransactionServiceTest {
 
 	@Test
 	public void withdrawTest_whenBalanceIsInsufficient_throwsInsufficientBalanceException() {
-		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(1000));
-		UserEntity loggedInCustomer = returnToUserEntity();
-		AuthenticatedUser authenticatedCostumer = returnToAuthenticatedUser(loggedInCustomer);
-		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		TransactionRequest withdrawalRequest = new TransactionRequest(1L, BigDecimal.valueOf(1000));
+		AccountEntity account = setAccountValues();
 		account.setBalance(BigDecimal.valueOf(500));
 
-		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		AuthenticatedUser authenticatedCostumer = returnAuthenticatedUser(account.getOwner());
+
+		when(accountService.getAccount(withdrawalRequest.getAccountId())).thenReturn(account);
 		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
 
-		assertThatThrownBy( () -> transactionService.withdraw(authenticatedCostumer, request))
+		assertThatThrownBy( () -> transactionService.withdraw(authenticatedCostumer, withdrawalRequest))
 		.isInstanceOf(InsufficientBalanceException.class)
 				.hasMessage("Account has insufficient balance for the requested withdrawal");
 
 		assertEquals(BigDecimal.valueOf(500), account.getBalance());
 
-		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(accountService,times(1)).getAccount(withdrawalRequest.getAccountId());
 		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
 		verify(accountService,times(1)).checkAccountStatus(account);
 		verify(accountService,never()).updateBalance(any(),any(),any());

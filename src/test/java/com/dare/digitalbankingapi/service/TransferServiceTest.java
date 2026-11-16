@@ -336,8 +336,8 @@ public class TransferServiceTest {
 				.isInstanceOf(AccountOperationNotAllowedException.class)
 				.hasMessage("Operation not allowed for account with id " + toAccountId + ". Current status: " + AccountStatus.CLOSED);
 
-		assertEquals(BigDecimal.valueOf(Long.parseLong("1000")), fromAccount.getBalance());
-		assertEquals(BigDecimal.valueOf(Long.parseLong("100")), toAccount.getBalance());
+		assertEquals(BigDecimal.valueOf((1000)), fromAccount.getBalance());
+		assertEquals(BigDecimal.valueOf((100)), toAccount.getBalance());
 
 		verify(accountService).userIsOwner(fromAccount, loggedInUser);
 		verify(accountService).checkAccountStatus(fromAccount);

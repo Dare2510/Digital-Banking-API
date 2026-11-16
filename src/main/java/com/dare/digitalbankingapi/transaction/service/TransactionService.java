@@ -106,25 +106,6 @@ public class TransactionService {
 		return buildResponse(transaction);
 	}
 
-	public TransactionEntity createTransferTransaction(AccountEntity account, String reference,
-													   TransferEntity transfer, TransactionType transactionType) {
-
-		TransactionEntity transaction =
-				new TransactionEntity(
-						account,
-						transfer.getAmount(),
-						reference,
-						transactionType,
-						account.getBalance(),
-						transfer
-				);
-
-		transactionRepository.saveAndFlush(transaction);
-		log.info("Transfer Transaction with {} id has been created", transaction.getId());
-
-		return transaction;
-	}
-
 	public Page<TransactionResponse> viewAllTransactions(Pageable pageable) {
 		sortValidator.validate(pageable, ALLOWED_SORT_FIELDS);
 
@@ -201,5 +182,24 @@ public class TransactionService {
 					log.info("Transaction with id {} has not been found", transactionId);
 					return new TransactionNotFoundException(transactionId);
 				});
+	}
+
+	public TransactionEntity createTransferTransaction(AccountEntity account, String reference,
+													   TransferEntity transfer, TransactionType transactionType) {
+
+		TransactionEntity transaction =
+				new TransactionEntity(
+						account,
+						transfer.getAmount(),
+						reference,
+						transactionType,
+						account.getBalance(),
+						transfer
+				);
+
+		transactionRepository.saveAndFlush(transaction);
+		log.info("Transfer Transaction with {} id has been created", transaction.getId());
+
+		return transaction;
 	}
 }
