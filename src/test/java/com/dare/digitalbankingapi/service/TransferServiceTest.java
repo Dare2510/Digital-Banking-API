@@ -491,7 +491,7 @@ public class TransferServiceTest {
 
 		List<TransferResponse> responses= transferService.findByAccountId(loggedInUser,accountId);
 
-		assertEquals(0,responses.size());;
+		assertEquals(0,responses.size());
 
 		verify(accountService,times(1)).getAccount(accountId);
 		verify(accountService,times(1)).userIsOwner(fromAccount, loggedInUser);
