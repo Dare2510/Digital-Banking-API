@@ -98,28 +98,28 @@ public class TransactionServiceTest {
 
 		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
 				.thenAnswer(invocation -> {
-						TransactionEntity transaction = invocation.getArgument(0);
-						transaction.setAccount(account);
-						transaction.setAmount(depositRequest.getAmount());
-						transaction.setType(TransactionType.DEPOSIT);
-						transaction.setBalanceAfter(account.getBalance().add(depositRequest.getAmount()));
-						transaction.setCreatedAt(LocalDateTime.now());
-						transaction.setId(1L);
+					TransactionEntity transaction = invocation.getArgument(0);
+					transaction.setAccount(account);
+					transaction.setAmount(depositRequest.getAmount());
+					transaction.setType(TransactionType.DEPOSIT);
+					transaction.setBalanceAfter(account.getBalance().add(depositRequest.getAmount()));
+					transaction.setCreatedAt(LocalDateTime.now());
+					transaction.setId(1L);
 
-						account.setBalance(account.getBalance().add(depositRequest.getAmount()));
+					account.setBalance(account.getBalance().add(depositRequest.getAmount()));
 
-						return transaction;
+					return transaction;
 				});
 
 		TransactionResponse depositResponse = transactionService.deposit(depositRequest);
 
-		assertEquals(depositRequest.getAccountId(),depositResponse.getFromAccountId());
-		assertEquals(depositRequest.getAmount(),depositResponse.getAmount());
+		assertEquals(depositRequest.getAccountId(), depositResponse.getFromAccountId());
+		assertEquals(depositRequest.getAmount(), depositResponse.getAmount());
 		assertEquals(account.getBalance(), depositResponse.getBalanceAfter());
 
-		verify(accountService,times(1)).getAccount(1L);
-		verify(accountService,times(1)).updateBalance(any(),any(),any());
-		verify(transactionRepository,times(1)).saveAndFlush(any(TransactionEntity.class));
+		verify(accountService, times(1)).getAccount(1L);
+		verify(accountService, times(1)).updateBalance(any(), any(), any());
+		verify(transactionRepository, times(1)).saveAndFlush(any(TransactionEntity.class));
 
 
 	}
@@ -136,13 +136,13 @@ public class TransactionServiceTest {
 		doThrow(new AccountOperationNotAllowedException(account.getId(), account.getStatus()))
 				.when(accountService).checkAccountStatus(account);
 
-		assertThatThrownBy( () ->  transactionService.deposit(depositRequest))
-		.isInstanceOf(AccountOperationNotAllowedException.class)
+		assertThatThrownBy(() -> transactionService.deposit(depositRequest))
+				.isInstanceOf(AccountOperationNotAllowedException.class)
 				.hasMessage("Operation not allowed for account with id " + depositRequest.getAccountId() +
 						". Current status: " + account.getStatus());
 
-		verify(accountService,times(1)).getAccount(depositRequest.getAccountId());
-		verify(transactionRepository,never()).saveAndFlush(any(TransactionEntity.class));
+		verify(accountService, times(1)).getAccount(depositRequest.getAccountId());
+		verify(transactionRepository, never()).saveAndFlush(any(TransactionEntity.class));
 
 		assertEquals(BigDecimal.valueOf(500), account.getBalance());
 
@@ -156,7 +156,7 @@ public class TransactionServiceTest {
 		account.setBalance(BigDecimal.valueOf(5000));
 
 		when(accountService.getAccount(withdrawalRequest.getAccountId())).thenReturn(account);
-		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
+		when(accountService.userIsOwner(account, authenticatedCostumer)).thenReturn(true);
 
 		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
 				.thenAnswer(invocation -> {
@@ -172,15 +172,15 @@ public class TransactionServiceTest {
 
 		TransactionResponse response = transactionService.withdraw(authenticatedCostumer, withdrawalRequest);
 
-		assertEquals(withdrawalRequest.getAccountId(),response.getFromAccountId());
-		assertEquals(withdrawalRequest.getAmount(),response.getAmount());
+		assertEquals(withdrawalRequest.getAccountId(), response.getFromAccountId());
+		assertEquals(withdrawalRequest.getAmount(), response.getAmount());
 		assertEquals(account.getBalance(), response.getBalanceAfter());
 
-		verify(accountService,times(1)).getAccount(withdrawalRequest.getAccountId());
-		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
-		verify(accountService,times(1)).checkAccountStatus(account);
-		verify(accountService,times(1)).updateBalance(any(),any(),any());
-		verify(transactionRepository,times(1)).saveAndFlush(any(TransactionEntity.class));
+		verify(accountService, times(1)).getAccount(withdrawalRequest.getAccountId());
+		verify(accountService, times(1)).userIsOwner(account, authenticatedCostumer);
+		verify(accountService, times(1)).checkAccountStatus(account);
+		verify(accountService, times(1)).updateBalance(any(), any(), any());
+		verify(transactionRepository, times(1)).saveAndFlush(any(TransactionEntity.class));
 	}
 
 	@Test
@@ -192,19 +192,19 @@ public class TransactionServiceTest {
 		AuthenticatedUser authenticatedCostumer = returnAuthenticatedUser(account.getOwner());
 
 		when(accountService.getAccount(withdrawalRequest.getAccountId())).thenReturn(account);
-		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
+		when(accountService.userIsOwner(account, authenticatedCostumer)).thenReturn(true);
 
-		assertThatThrownBy( () -> transactionService.withdraw(authenticatedCostumer, withdrawalRequest))
-		.isInstanceOf(InsufficientBalanceException.class)
+		assertThatThrownBy(() -> transactionService.withdraw(authenticatedCostumer, withdrawalRequest))
+				.isInstanceOf(InsufficientBalanceException.class)
 				.hasMessage("Account has insufficient balance for the requested withdrawal");
 
 		assertEquals(BigDecimal.valueOf(500), account.getBalance());
 
-		verify(accountService,times(1)).getAccount(withdrawalRequest.getAccountId());
-		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
-		verify(accountService,times(1)).checkAccountStatus(account);
-		verify(accountService,never()).updateBalance(any(),any(),any());
-		verify(transactionRepository,never()).saveAndFlush(any(TransactionEntity.class));
+		verify(accountService, times(1)).getAccount(withdrawalRequest.getAccountId());
+		verify(accountService, times(1)).userIsOwner(account, authenticatedCostumer);
+		verify(accountService, times(1)).checkAccountStatus(account);
+		verify(accountService, never()).updateBalance(any(), any(), any());
+		verify(transactionRepository, never()).saveAndFlush(any(TransactionEntity.class));
 
 
 	}
