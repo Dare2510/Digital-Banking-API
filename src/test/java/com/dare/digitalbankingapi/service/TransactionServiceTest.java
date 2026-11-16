@@ -6,6 +6,7 @@ import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
+import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.dto.TransactionResponse;
 import com.dare.digitalbankingapi.transaction.entity.TransactionEntity;
@@ -74,6 +75,14 @@ public class TransactionServiceTest {
 
 	}
 
+	private AuthenticatedUser returnToAuthenticatedUser(UserEntity user) {
+		return new AuthenticatedUser(
+				user.getId(),
+				user.getEmail(),
+				user.getUserRole()
+		);
+	}
+
 	@BeforeEach
 	void setUp() {
 		transactionService = new TransactionService(transactionRepository, accountService, sortValidator);
@@ -139,5 +148,41 @@ public class TransactionServiceTest {
 
 		assertEquals(BigDecimal.valueOf(500), account.getBalance());
 
+	}
+
+	@Test
+	public void withdrawTest_whenRequestIsValid_returnsTransactionResponse() {
+		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(1000));
+		UserEntity loggedInCustomer = returnToUserEntity();
+		AuthenticatedUser authenticatedCostumer = returnToAuthenticatedUser(loggedInCustomer);
+		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		account.setBalance(BigDecimal.valueOf(5000));
+
+		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+		when(accountService.userIsOwner(account,authenticatedCostumer)).thenReturn(true);
+
+		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
+				.thenAnswer(invocation -> {
+					TransactionEntity transaction = invocation.getArgument(0);
+					transaction.setId(1L);
+					transaction.setAccount(account);
+					transaction.setAmount(request.getAmount());
+					transaction.setType(TransactionType.WITHDRAW);
+					transaction.setBalanceAfter(account.getBalance().subtract(request.getAmount()));
+					account.setBalance(account.getBalance().subtract(request.getAmount()));
+					return transaction;
+				});
+
+		TransactionResponse response = transactionService.withdraw(authenticatedCostumer, request);
+
+		assertEquals(request.getAccountId(),response.getFromAccountId());
+		assertEquals(request.getAmount(),response.getAmount());
+		assertEquals(account.getBalance(), response.getBalanceAfter());
+
+		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(accountService,times(1)).userIsOwner(account,authenticatedCostumer);
+		verify(accountService,times(1)).checkAccountStatus(account);
+		verify(accountService,times(1)).updateBalance(any(),any(),any());
+		verify(transactionRepository,times(1)).saveAndFlush(any(TransactionEntity.class));
 	}
 }
