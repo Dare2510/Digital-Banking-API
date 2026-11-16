@@ -3,6 +3,7 @@ package com.dare.digitalbankingapi.service;
 import com.dare.digitalbankingapi.account.entity.AccountEntity;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
+import com.dare.digitalbankingapi.account.exceptions.AccountOperationNotAllowedException;
 import com.dare.digitalbankingapi.account.service.AccountService;
 import com.dare.digitalbankingapi.common.validation.SortValidator;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -84,7 +86,7 @@ public class TransactionServiceTest {
 		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
 		account.setBalance(BigDecimal.valueOf(500));
 
-		when(accountService.getAccount(account.getId())).thenReturn(account);
+		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
 
 		when(transactionRepository.saveAndFlush(any(TransactionEntity.class)))
 				.thenAnswer(invocation -> {
@@ -111,6 +113,31 @@ public class TransactionServiceTest {
 		verify(accountService,times(1)).updateBalance(any(),any(),any());
 		verify(transactionRepository,times(1)).saveAndFlush(any(TransactionEntity.class));
 
+
+	}
+
+	@Test
+	public void depositTest_whenAccountStatusIsNotValid_throwsAccountOperationNotAllowedException() {
+		TransactionRequest request = new TransactionRequest(1L, BigDecimal.valueOf(500));
+		UserEntity loggedInCustomer = returnToUserEntity();
+		AccountEntity account = setAccountValues(1L, "accountNumber", loggedInCustomer);
+		account.setBalance(BigDecimal.valueOf(500));
+		account.setStatus(AccountStatus.CLOSED);
+
+		when(accountService.getAccount(request.getAccountId())).thenReturn(account);
+
+		doThrow(new AccountOperationNotAllowedException(account.getId(), account.getStatus()))
+				.when(accountService).checkAccountStatus(account);
+
+		assertThatThrownBy( () ->  transactionService.deposit(request))
+		.isInstanceOf(AccountOperationNotAllowedException.class)
+				.hasMessage("Operation not allowed for account with id " + request.getAccountId() +
+						". Current status: " + account.getStatus());
+
+		verify(accountService,times(1)).getAccount(request.getAccountId());
+		verify(transactionRepository,never()).saveAndFlush(any(TransactionEntity.class));
+
+		assertEquals(BigDecimal.valueOf(500), account.getBalance());
 
 	}
 }
