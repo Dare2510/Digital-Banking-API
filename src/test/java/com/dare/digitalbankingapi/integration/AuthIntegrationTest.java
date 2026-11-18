@@ -6,7 +6,6 @@ import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.dare.digitalbankingapi.user.repository.UserRepository;
 import com.jayway.jsonpath.JsonPath;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +25,9 @@ import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Slf4j
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -57,7 +56,9 @@ public class AuthIntegrationTest {
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
 
 	@AfterEach
-	public void cleanUp() {userRepository.deleteAll();}
+	public void cleanUp() {userRepository
+			.findByEmail(EMAIL)
+			.ifPresent(user -> userRepository.delete(user));}
 
 	@Test
 	public void loginTest_requestIsValid_returnJWT() throws Exception {
@@ -80,6 +81,23 @@ public class AuthIntegrationTest {
 
 	}
 
+	@Test
+	public void loginTest_requestWithInvalidPassword_returnsUnauthorized() throws Exception {
+		CustomerUserRequest request = newCustomerUserRequest();
+		createCustomer(request);
+
+		LoginRequest invalidLoginRequest = invalidPassword();
+
+		mockMvc.perform(post("/api/auth/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidLoginRequest)))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.message")
+						.value("Password and/or Email input is incorrect"));
+	}
+
+
+
 
 	//Helper
 	private CustomerUserRequest newCustomerUserRequest() {
@@ -93,6 +111,13 @@ public class AuthIntegrationTest {
 		return new LoginRequest(
 				EMAIL,
 				PASSWORD
+		);
+	}
+
+	private LoginRequest invalidPassword() {
+		return new LoginRequest(
+				EMAIL,
+				"incorrectPassword"
 		);
 	}
 
