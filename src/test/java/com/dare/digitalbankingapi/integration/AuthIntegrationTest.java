@@ -51,14 +51,16 @@ public class AuthIntegrationTest {
 	@Autowired
 	private JwtUtil jwtUtil;
 
-	private final String EMAIL = "testUserMail@mail.com";
+	private final String EMAIL = "testusermail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
 
 	@AfterEach
-	public void cleanUp() {userRepository
-			.findByEmail(EMAIL)
-			.ifPresent(user -> userRepository.delete(user));}
+	public void cleanUp() {
+		userRepository
+				.findByEmail(EMAIL)
+				.ifPresent(user -> userRepository.delete(user));
+	}
 
 	@Test
 	public void loginTest_requestIsValid_returnJWT() throws Exception {
@@ -76,8 +78,8 @@ public class AuthIntegrationTest {
 
 		assertEquals(jwt.length(), response.length());
 		assertEquals(EMAIL.toLowerCase(Locale.ROOT), jwtUtil.extractEmail(response));
-		assertEquals(userId,jwtUtil.extractUserId(response));
-		assertEquals(CUSTOMER_ROLE.name(),jwtUtil.extractUserRole(response));
+		assertEquals(userId, jwtUtil.extractUserId(response));
+		assertEquals(CUSTOMER_ROLE.name(), jwtUtil.extractUserRole(response));
 
 	}
 
@@ -86,7 +88,7 @@ public class AuthIntegrationTest {
 		CustomerUserRequest request = newCustomerUserRequest();
 		createCustomer(request);
 
-		LoginRequest invalidLoginRequest = invalidRequest(EMAIL,"invalidPassword");
+		LoginRequest invalidLoginRequest = invalidRequest(EMAIL, "invalidPassword");
 
 		mockMvc.perform(post("/api/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +100,7 @@ public class AuthIntegrationTest {
 
 	@Test
 	public void loginTest_requestWithInvalidEmail_returnsUnauthorized() throws Exception {
-		LoginRequest invalidLoginRequest = invalidRequest("invalidEmail@mail.com",PASSWORD);
+		LoginRequest invalidLoginRequest = invalidRequest("invalidEmail@mail.com", PASSWORD);
 
 		mockMvc.perform(post("/api/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -131,13 +133,13 @@ public class AuthIntegrationTest {
 	}
 
 	private String generateToken(Long userId) {
-		return jwtUtil.generateToken(EMAIL,CUSTOMER_ROLE,userId);
+		return jwtUtil.generateToken(EMAIL, CUSTOMER_ROLE, userId);
 	}
 
 	private Long createUserAndGetId(CustomerUserRequest customerUserRequest) throws Exception {
 		String response = mockMvc.perform(post("/api/auth/register")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(customerUserRequest)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(customerUserRequest)))
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 

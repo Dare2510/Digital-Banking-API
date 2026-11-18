@@ -65,7 +65,13 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex,
 																			   HttpServletRequest request) {
-		return errorResponseBuilder(ex, request, HttpStatus.BAD_REQUEST);
+			ErrorResponse error = new ErrorResponse(
+					HttpStatus.BAD_REQUEST.value(),
+					ex.getAllErrors().get(0).getDefaultMessage(),
+					request.getRequestURI(),
+					LocalDateTime.now()
+			);
+			return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 	}
 
 	//Common
