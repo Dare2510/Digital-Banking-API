@@ -86,7 +86,7 @@ public class AuthIntegrationTest {
 		CustomerUserRequest request = newCustomerUserRequest();
 		createCustomer(request);
 
-		LoginRequest invalidLoginRequest = invalidPassword();
+		LoginRequest invalidLoginRequest = invalidRequest(EMAIL,"invalidPassword");
 
 		mockMvc.perform(post("/api/auth/login")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -96,8 +96,17 @@ public class AuthIntegrationTest {
 						.value("Password and/or Email input is incorrect"));
 	}
 
+	@Test
+	public void loginTest_requestWithInvalidEmail_returnsUnauthorized() throws Exception {
+		LoginRequest invalidLoginRequest = invalidRequest("invalidEmail@mail.com",PASSWORD);
 
-
+		mockMvc.perform(post("/api/auth/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(invalidLoginRequest)))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.message")
+						.value("Password and/or Email input is incorrect"));
+	}
 
 	//Helper
 	private CustomerUserRequest newCustomerUserRequest() {
@@ -114,10 +123,10 @@ public class AuthIntegrationTest {
 		);
 	}
 
-	private LoginRequest invalidPassword() {
+	private LoginRequest invalidRequest(String email, String password) {
 		return new LoginRequest(
-				EMAIL,
-				"incorrectPassword"
+				email,
+				password
 		);
 	}
 
