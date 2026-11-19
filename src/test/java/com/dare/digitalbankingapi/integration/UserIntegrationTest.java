@@ -115,7 +115,27 @@ public class UserIntegrationTest {
 						.with(auth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(profileRequest)))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value(profileRequest.getName()))
+				.andExpect(jsonPath("$.surname").value(profileRequest.getSurname()))
+				.andExpect(jsonPath("$.street").value(profileRequest.getStreet()))
+				.andExpect(jsonPath("$.houseNumber").value(profileRequest.getHouseNumber()))
+				.andExpect(jsonPath("$.city").value(profileRequest.getCity()))
+				.andExpect(jsonPath("$.zipCode").value(profileRequest.getZipCode()))
+				.andExpect(jsonPath("$.country").value(profileRequest.getCountry()));
+	}
+
+	@Test
+	public void createProfile_whenNoUserExists_returns401() throws Exception {
+
+		UserProfileRequest profileRequest = returnRequest();
+
+		mockMvc.perform(post("/api/auth/register/profile")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(profileRequest)))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.message")
+						.value("You must be authenticated to access this resource"));
 	}
 
 

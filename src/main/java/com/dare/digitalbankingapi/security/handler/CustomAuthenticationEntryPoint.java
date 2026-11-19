@@ -30,7 +30,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
 		ErrorResponse errorResponse = new ErrorResponse(
 				HttpStatus.UNAUTHORIZED.value(),
-				"You must be authenticated to access this ressource",
+				"You must be authenticated to access this resource",
 				request.getRequestURI(),
 				LocalDateTime.now()
 		);
