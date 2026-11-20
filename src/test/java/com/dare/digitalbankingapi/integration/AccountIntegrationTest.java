@@ -35,7 +35,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -127,6 +127,14 @@ public class AccountIntegrationTest {
 				.andExpect(status().isOk());
 	}
 
+	private void createAccount(Long userId, AccountRequest accountRequest) throws Exception {
+		mockMvc.perform(post("/api/customer/accounts")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
+				.andExpect(status().isOk());
+	}
+
 	@Test
 	public void createAccount_whenRequestIsValid_returnsOK() throws Exception {
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
@@ -149,6 +157,68 @@ public class AccountIntegrationTest {
 				.andExpect(jsonPath("$.balance").value(BigDecimal.ZERO))
 				.andExpect(jsonPath("$.currency").value(accountRequest.getCurrency().name()))
 				.andExpect(jsonPath("$.status").value(AccountStatus.ACTIVE.name()));
+
+	}
+
+	@Test
+	public void createAccount_whenNoUserProfileExists_returnsNoFound() throws Exception {
+
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+
+		mockMvc.perform(post("/api/customer/accounts")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message")
+						.value("Could not find profile for user id " + userId));
+
+	}
+
+	@Test
+	public void getAllAccountsByAuthenticatedUser_whenTwoAccountsExist_returnsListOfAccountResponses() throws Exception {
+
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		AccountRequest firstAccount = new AccountRequest(Currency.EUR);
+		AccountRequest secondAccount = new AccountRequest(Currency.USD);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+
+		createProfile(profileRequest, userId);
+
+		createAccount(userId, firstAccount);
+		createAccount(userId, secondAccount);
+
+		mockMvc.perform(get("/api/customer/accounts/all")
+				.with(auth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.size()").value(2))
+				.andExpect(jsonPath("$[0,1].id").exists())
+				.andExpect(jsonPath("$.[0].currency").value(firstAccount.getCurrency().name()))
+				.andExpect(jsonPath("$.[1].currency").value(secondAccount.getCurrency().name()));
+
+
+	}
+
+	@Test
+	public void getAllAccountsByAuthenticatedUser_whenNoAccountsExist_returnsEmptyListOfAccountResponses() throws Exception {
+
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+
+		createProfile(profileRequest, userId);
+
+		mockMvc.perform(get("/api/customer/accounts/all")
+						.with(auth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.size()").value(0));
 
 	}
 }
