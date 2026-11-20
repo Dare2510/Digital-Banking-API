@@ -63,8 +63,9 @@ public class UserIntegrationTest {
 
 	@AfterEach
 	public void tearDown() {
-		userRepository.deleteAll();
 		userProfileRepository.deleteAll();
+		userRepository.deleteAll();
+
 	}
 
 	@Test
