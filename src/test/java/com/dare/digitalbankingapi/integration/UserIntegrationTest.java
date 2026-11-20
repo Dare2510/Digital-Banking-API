@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -127,7 +128,6 @@ public class UserIntegrationTest {
 
 	@Test
 	public void createProfile_whenNoUserExists_returns401() throws Exception {
-
 		UserProfileRequest profileRequest = returnRequest();
 
 		mockMvc.perform(post("/api/auth/register/profile")
@@ -138,6 +138,45 @@ public class UserIntegrationTest {
 						.value("You must be authenticated to access this resource"));
 	}
 
+	@Test
+	public void updateProfile_withValidRequest_returnsUserProfileResponse() throws Exception {
+		CustomerUserRequest validRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(validRequest);
+
+		UserProfileRequest profileRequest = returnRequest();
+		createProfile(profileRequest, userId);
+
+		UserProfileRequest updatedProfileRequest = returnUpdateRequest();
+
+		mockMvc.perform(patch("/api/auth/register/profile/update")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedProfileRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value(updatedProfileRequest.getName()))
+				.andExpect(jsonPath("$.surname").value(updatedProfileRequest.getSurname()))
+				.andExpect(jsonPath("$.street").value(updatedProfileRequest.getStreet()))
+				.andExpect(jsonPath("$.houseNumber").value(updatedProfileRequest.getHouseNumber()))
+				.andExpect(jsonPath("$.city").value(updatedProfileRequest.getCity()))
+				.andExpect(jsonPath("$.zipCode").value(updatedProfileRequest.getZipCode()))
+				.andExpect(jsonPath("$.country").value(updatedProfileRequest.getCountry()));
+	}
+
+	@Test
+	public void updateProfile_whenNoProfileExists_returnsConflict() throws Exception {
+		CustomerUserRequest validRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(validRequest);
+
+		UserProfileRequest updatedProfileRequest = returnUpdateRequest();
+
+		mockMvc.perform(patch("/api/auth/register/profile/update")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedProfileRequest)))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message")
+						.value("Profile update failed for user id: " + userId + "no profile exists"));
+	}
 
 	//Helper
 
@@ -150,6 +189,18 @@ public class UserIntegrationTest {
 				"City",
 				"123456",
 				"Country"
+		);
+	}
+
+	private UserProfileRequest returnUpdateRequest() {
+		return new UserProfileRequest(
+				"updatedName",
+				"updatedSurname",
+				"updatedStreet",
+				"10",
+				"updatedCity",
+				"654321",
+				"updatedCountry"
 		);
 	}
 
@@ -175,6 +226,14 @@ public class UserIntegrationTest {
 
 		return ((Number) JsonPath.read(response, "$.id")).longValue();
 
+	}
+
+	private void createProfile(UserProfileRequest profileRequest,Long userId) throws Exception {
+		mockMvc.perform(post("/api/auth/register/profile")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(profileRequest)))
+				.andExpect(status().isOk());
 	}
 
 
