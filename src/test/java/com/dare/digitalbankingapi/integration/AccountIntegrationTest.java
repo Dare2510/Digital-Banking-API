@@ -33,7 +33,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -69,6 +68,7 @@ public class AccountIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	private final String EMAIL = "testusermail@mail.com";
+	private final String SECOND_EMAIL = "secondUserEmail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
 
@@ -133,6 +133,17 @@ public class AccountIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk());
+	}
+
+	private Long createAccountAndGetId(Long userId, AccountRequest accountRequest) throws Exception {
+		String response = mockMvc.perform(post("/api/customer/accounts")
+						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(response, "$.id")).longValue();
 	}
 
 	@Test
@@ -221,4 +232,55 @@ public class AccountIntegrationTest {
 				.andExpect(jsonPath("$.size()").value(0));
 
 	}
+
+	@Test
+	public void getAccountById_whenAccountExists_returnsAccountResponse() throws Exception {
+
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+
+		createProfile(profileRequest, userId);
+
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		mockMvc.perform(get("/api/customer/accounts/" + accountId)
+				.with(auth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(accountId))
+				.andExpect(jsonPath("$.accountNumber").exists())
+				.andExpect(jsonPath("$.balance").value(BigDecimal.ZERO.doubleValue()))
+				.andExpect(jsonPath("$.currency").value(accountRequest.getCurrency().name()))
+				.andExpect(jsonPath("$.status").value(AccountStatus.ACTIVE.name()));
+	}
+
+	@Test
+	public void getAccountById_whenAccountExistsButUserIsNotOwner_returnsNotFound() throws Exception {
+
+		CustomerUserRequest loggedInUser = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long loggedInUserId = createUserAndGetId(loggedInUser);
+
+		UserProfileRequest loggedInUserProfileRequest = returnProfileRequest();
+		createProfile(loggedInUserProfileRequest, loggedInUserId);
+
+		CustomerUserRequest owner = new CustomerUserRequest(SECOND_EMAIL, PASSWORD);
+		Long ownerId = createUserAndGetId(owner);
+
+		UserProfileRequest ownerProfileRequest = returnProfileRequest();
+		createProfile(ownerProfileRequest, ownerId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(ownerId, accountRequest);
+
+		mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(auth(loggedInUserId)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message")
+						.value("Account with id " + accountId + " not found"));
+	}
+
+
 }
