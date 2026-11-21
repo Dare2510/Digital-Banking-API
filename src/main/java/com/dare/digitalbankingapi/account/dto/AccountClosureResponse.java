@@ -13,6 +13,10 @@ public class AccountClosureResponse {
 
 	private Long accountId;
 	private String accountNumber;
-	private final String message = "Account with " + accountId +
-			" and " + accountNumber + "Account number has been closed";
+
+	public String getMessage() {
+		return "Account with id " + accountId
+				+ " and account number " + accountNumber
+				+ " has been closed";
+	}
 }

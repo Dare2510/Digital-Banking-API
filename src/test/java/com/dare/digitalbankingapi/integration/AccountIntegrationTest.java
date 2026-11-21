@@ -161,6 +161,15 @@ public class AccountIntegrationTest {
 		return ((Number) JsonPath.read(response, "$.id")).longValue();
 	}
 
+	private String getAccountNumber(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.accountNumber"));
+	}
+
 	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
 		mockMvc.perform(post("/api/staff/accounts/deposits")
 						.with(adminAuth())
@@ -197,7 +206,7 @@ public class AccountIntegrationTest {
 	}
 
 	@Test
-	public void createAccount_whenNoUserProfileExists_returnsNoFound() throws Exception {
+	public void createAccount_whenNoUserProfileExists_returnsNotFound() throws Exception {
 
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
 		Long userId = createUserAndGetId(registerRequest);
@@ -355,7 +364,29 @@ public class AccountIntegrationTest {
 				.andExpect(jsonPath("$.message")
 						.value("Account has insufficient balance for the requested withdrawal"));
 
+	}
 
+	@Test
+	public void closeAccount_whenRequestIsValid_returnsAccountClosureResponse() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+		String accountNumber = getAccountNumber(userId, accountId);
+
+		mockMvc.perform(post("/api/customer/accounts/" + accountId + "/close")
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accountId").value(accountId))
+				.andExpect(jsonPath("$.accountNumber").exists())
+				.andExpect(jsonPath("$.message").value(
+						"Account with id " + accountId
+								+ " and account number " + accountNumber
+								+ " has been closed"));
 	}
 
 
