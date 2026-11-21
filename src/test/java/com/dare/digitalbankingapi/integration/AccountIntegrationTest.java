@@ -1,6 +1,7 @@
 package com.dare.digitalbankingapi.integration;
 
 import com.dare.digitalbankingapi.account.dto.AccountRequest;
+import com.dare.digitalbankingapi.account.dto.AccountStatusRequest;
 import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
@@ -32,11 +33,11 @@ import org.testcontainers.utility.TestcontainersConfiguration;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -170,12 +171,39 @@ public class AccountIntegrationTest {
 		return (JsonPath.read(response, "$.accountNumber"));
 	}
 
+	private String getAccountStatus(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.status"));
+	}
+
+	private double getAccountBalance(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.balance"));
+	}
+
 	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
 		mockMvc.perform(post("/api/staff/accounts/deposits")
 						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(transactionRequest)))
 				.andExpect(status().isOk());
+	}
+
+	private void setAccountStatusToBlocked(Long accountId) throws Exception {
+
+		mockMvc.perform(patch("/api/staff/accounts/"+ accountId + "/status")
+				.with(adminAuth())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new AccountStatusRequest(AccountStatus.BLOCKED))))
+				.andExpect(status().isNoContent());
 	}
 
 	//Test
@@ -382,12 +410,44 @@ public class AccountIntegrationTest {
 						.with(customerAuth(userId)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.accountId").value(accountId))
-				.andExpect(jsonPath("$.accountNumber").exists())
+				.andExpect(jsonPath("$.accountNumber").value(accountNumber))
 				.andExpect(jsonPath("$.message").value(
 						"Account with id " + accountId
 								+ " and account number " + accountNumber
 								+ " has been closed"));
 	}
+
+	@Test
+	public void closeAccount_whenAccountStatusIsInvalidAndBalanceIsNotZero_returnsBadRequest() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+		depositToAccount(deposit);
+
+		setAccountStatusToBlocked(accountId);
+		BigDecimal balance = BigDecimal.valueOf(getAccountBalance(userId, accountId))
+				.setScale(2, RoundingMode.HALF_UP);
+
+		String accountStatus = getAccountStatus(userId, accountId);
+
+		mockMvc.perform(post("/api/customer/accounts/" + accountId + "/close")
+						.with(customerAuth(userId)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value(
+						"Account with id " + accountId
+								+ " cannot be closed. Current status: " + accountStatus
+								+ ", current balance: " + balance
+								+ ". Account must be ACTIVE and have zero balance."));
+	}
+
+
 
 
 }
