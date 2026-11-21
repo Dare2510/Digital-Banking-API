@@ -5,6 +5,7 @@ import com.dare.digitalbankingapi.account.entity.AccountStatus;
 import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
+import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
@@ -34,7 +35,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,7 +70,6 @@ public class AccountIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	private final String EMAIL = "testusermail@mail.com";
-	private final String SECOND_EMAIL = "secondUserEmail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
 
@@ -95,7 +96,7 @@ public class AccountIntegrationTest {
 		);
 	}
 
-	private RequestPostProcessor auth(Long userId) {
+	private RequestPostProcessor customerAuth(Long userId) {
 		AuthenticatedUser customer = new AuthenticatedUser(
 				userId, EMAIL, CUSTOMER_ROLE
 		);
@@ -104,6 +105,20 @@ public class AccountIntegrationTest {
 				customer,
 				null,
 				List.of(new SimpleGrantedAuthority("ROLE_" + CUSTOMER_ROLE.name())));
+
+		return authentication(auth);
+	}
+
+	private RequestPostProcessor adminAuth() {
+		//99 -> random admin id
+		AuthenticatedUser admin = new AuthenticatedUser(
+				99L, "adminMail@mail.com", UserRole.ADMIN
+		);
+
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+				admin,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + UserRole.ADMIN.name())));
 
 		return authentication(auth);
 	}
@@ -121,7 +136,7 @@ public class AccountIntegrationTest {
 
 	private void createProfile(UserProfileRequest profileRequest, Long userId) throws Exception {
 		mockMvc.perform(post("/api/auth/register/profile")
-						.with(auth(userId))
+						.with(customerAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(profileRequest)))
 				.andExpect(status().isOk());
@@ -129,7 +144,7 @@ public class AccountIntegrationTest {
 
 	private void createAccount(Long userId, AccountRequest accountRequest) throws Exception {
 		mockMvc.perform(post("/api/customer/accounts")
-						.with(auth(userId))
+						.with(customerAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk());
@@ -137,7 +152,7 @@ public class AccountIntegrationTest {
 
 	private Long createAccountAndGetId(Long userId, AccountRequest accountRequest) throws Exception {
 		String response = mockMvc.perform(post("/api/customer/accounts")
-						.with(auth(userId))
+						.with(customerAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk())
@@ -145,6 +160,16 @@ public class AccountIntegrationTest {
 
 		return ((Number) JsonPath.read(response, "$.id")).longValue();
 	}
+
+	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
+		mockMvc.perform(post("/api/staff/accounts/deposits")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(transactionRequest)))
+				.andExpect(status().isOk());
+	}
+
+	//Test
 
 	@Test
 	public void createAccount_whenRequestIsValid_returnsOK() throws Exception {
@@ -157,9 +182,9 @@ public class AccountIntegrationTest {
 		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
 
 		mockMvc.perform(post("/api/customer/accounts")
-				.with(auth(userId))
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(accountRequest)))
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").exists())
 				.andExpect(jsonPath("$.name").value(profileRequest.getName()))
@@ -180,7 +205,7 @@ public class AccountIntegrationTest {
 		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
 
 		mockMvc.perform(post("/api/customer/accounts")
-						.with(auth(userId))
+						.with(customerAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(accountRequest)))
 				.andExpect(status().isNotFound())
@@ -206,7 +231,7 @@ public class AccountIntegrationTest {
 		createAccount(userId, secondAccount);
 
 		mockMvc.perform(get("/api/customer/accounts/all")
-				.with(auth(userId)))
+						.with(customerAuth(userId)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.size()").value(2))
 				.andExpect(jsonPath("$[0,1].id").exists())
@@ -227,7 +252,7 @@ public class AccountIntegrationTest {
 		createProfile(profileRequest, userId);
 
 		mockMvc.perform(get("/api/customer/accounts/all")
-						.with(auth(userId)))
+						.with(customerAuth(userId)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.size()").value(0));
 
@@ -248,7 +273,7 @@ public class AccountIntegrationTest {
 		Long accountId = createAccountAndGetId(userId, accountRequest);
 
 		mockMvc.perform(get("/api/customer/accounts/" + accountId)
-				.with(auth(userId)))
+						.with(customerAuth(userId)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(accountId))
 				.andExpect(jsonPath("$.accountNumber").exists())
@@ -266,7 +291,7 @@ public class AccountIntegrationTest {
 		UserProfileRequest loggedInUserProfileRequest = returnProfileRequest();
 		createProfile(loggedInUserProfileRequest, loggedInUserId);
 
-		CustomerUserRequest owner = new CustomerUserRequest(SECOND_EMAIL, PASSWORD);
+		CustomerUserRequest owner = new CustomerUserRequest("secondUserEmail@mail.com", PASSWORD);
 		Long ownerId = createUserAndGetId(owner);
 
 		UserProfileRequest ownerProfileRequest = returnProfileRequest();
@@ -276,10 +301,61 @@ public class AccountIntegrationTest {
 		Long accountId = createAccountAndGetId(ownerId, accountRequest);
 
 		mockMvc.perform(get("/api/customer/accounts/" + accountId)
-						.with(auth(loggedInUserId)))
+						.with(customerAuth(loggedInUserId)))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message")
 						.value("Account with id " + accountId + " not found"));
+	}
+
+	@Test
+	public void withdrawFromAccount_whenRequestIsValid_returnsTransactionResponse() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+		depositToAccount(deposit);
+
+		TransactionRequest withdraw = new TransactionRequest(accountId, BigDecimal.valueOf(500));
+
+		mockMvc.perform(post("/api/customer/accounts/withdrawals")
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(withdraw)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.fromAccountId").value(accountId))
+				.andExpect(jsonPath("$.balanceAfter").value(BigDecimal.valueOf(500).doubleValue()))
+				.andExpect(jsonPath("$.amount").value(withdraw.getAmount().doubleValue()));
+
+	}
+
+	@Test
+	public void withdrawFromAccount_whenAmountExceedsBalance_returnsBadRequest() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest withdraw = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+
+		mockMvc.perform(post("/api/customer/accounts/withdrawals")
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(withdraw)))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message")
+						.value("Account has insufficient balance for the requested withdrawal"));
+
+
 	}
 
 
