@@ -275,6 +275,79 @@ public class AccountIntegrationTest {
 								+ ". Account must be ACTIVE and have zero balance."));
 	}
 
+	@Test
+	public void updateAccountStatus_whenTransitionIsValid_returnsNoContent() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		mockMvc.perform(patch("/api/staff/accounts/" + accountId + "/status")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(new AccountStatusRequest(AccountStatus.BLOCKED))))
+				.andExpect(status().isNoContent());
+	}
+
+	@Test
+	public void updateAccountStatus_whenAccountIsClosed_returnsConflict() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		closeAccount(accountId, userId);
+		String currentStatus = getAccountStatus(userId, accountId);
+
+		AccountStatusRequest newStatus = new AccountStatusRequest(AccountStatus.ACTIVE);
+
+		mockMvc.perform(patch("/api/staff/accounts/" + accountId + "/status")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(newStatus)))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message")
+						.value("Invalid status transition from " + currentStatus + " to " + newStatus.getStatus()));
+	}
+
+	@Test
+	public void getAccountDetailsByStaff_whenRequestIsValid_returnsAccountResponse() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		String accountNumber = getAccountNumber(userId, accountId);
+		String currentStatus = getAccountStatus(userId, accountId);
+		BigDecimal balance = BigDecimal.valueOf(getAccountBalance(userId, accountId));
+
+		mockMvc.perform(get("/api/staff/accounts/" + accountId)
+				.with(adminAuth()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(accountId))
+				.andExpect(jsonPath("$.name").value(profileRequest.getName()))
+				.andExpect(jsonPath("$.surname").value(profileRequest.getSurname()))
+				.andExpect(jsonPath("$.accountNumber").value(accountNumber))
+				.andExpect(jsonPath("$.balance").value(balance))
+				.andExpect(jsonPath("$.status").value(currentStatus));
+
+
+
+
+	}
+
 	//Helper
 
 	private UserProfileRequest returnProfileRequest() {
@@ -396,6 +469,12 @@ public class AccountIntegrationTest {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(new AccountStatusRequest(AccountStatus.BLOCKED))))
 				.andExpect(status().isNoContent());
+	}
+
+	private void closeAccount(Long accountId, Long userId) throws Exception {
+		mockMvc.perform(post("/api/customer/accounts/" + accountId + "/close")
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk());
 	}
 
 
