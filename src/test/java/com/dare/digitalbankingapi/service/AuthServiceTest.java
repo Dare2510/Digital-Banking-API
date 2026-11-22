@@ -37,28 +37,6 @@ public class AuthServiceTest {
 
 	private final String CORRECT_MAIL = "correct@mail.com";
 
-	//Helper
-	private UserEntity returnUser() {
-		String HASHED_PASSWORD = "passwordHash";
-		UserEntity customer = new UserEntity
-				(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), HASHED_PASSWORD, UserRole.CUSTOMER);
-
-		Long USER_ID = 1L;
-		customer.setId(USER_ID);
-
-		return customer;
-	}
-
-	private LoginRequest successfulLoginRequest() {
-		String CORRECT_PASSWORD = "CorrectPassword";
-		return new LoginRequest(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), CORRECT_PASSWORD);
-	}
-
-	private LoginRequest incorrectPasswordLoginRequest() {
-		String INCORRECT_PASSWORD = "IncorrectPassword";
-		return new LoginRequest(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), INCORRECT_PASSWORD);
-	}
-
 
 	@BeforeEach
 	public void setUp() {
@@ -97,5 +75,28 @@ public class AuthServiceTest {
 		verify(userService, times(1)).getUserByEmail(incorrectPasswordLoginRequest.getEmail());
 		verify(passwordEncoder, times(1)).matches(incorrectPasswordLoginRequest.getPassword(), user.getPasswordHash());
 
+	}
+
+	//Helper
+
+	private UserEntity returnUser() {
+		String HASHED_PASSWORD = "passwordHash";
+		UserEntity customer = new UserEntity
+				(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), HASHED_PASSWORD, UserRole.CUSTOMER);
+
+		Long USER_ID = 1L;
+		customer.setId(USER_ID);
+
+		return customer;
+	}
+
+	private LoginRequest successfulLoginRequest() {
+		String CORRECT_PASSWORD = "CorrectPassword";
+		return new LoginRequest(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), CORRECT_PASSWORD);
+	}
+
+	private LoginRequest incorrectPasswordLoginRequest() {
+		String INCORRECT_PASSWORD = "IncorrectPassword";
+		return new LoginRequest(CORRECT_MAIL.trim().toLowerCase(Locale.ROOT), INCORRECT_PASSWORD);
 	}
 }

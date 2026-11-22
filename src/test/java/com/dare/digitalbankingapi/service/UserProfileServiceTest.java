@@ -38,6 +38,8 @@ public class UserProfileServiceTest {
 	@Spy
 	private ModelMapper modelMapper;
 
+	//UserProfile Fields
+
 	private final String NAME = "testName";
 	private final String SURNAME = "testSurName";
 	private final String STREET = "testStreet";
@@ -64,49 +66,7 @@ public class UserProfileServiceTest {
 				, userProfileRepository, modelMapper);
 	}
 
-	//Helper
-	private UserProfileRequest newUserProfileRequest() {
-		return new UserProfileRequest(NAME, SURNAME, STREET,
-				HOUSE_NUMBER, CITY, ZIPCODE, COUNTRY);
-	}
-
-	private UserProfileRequest updateduserProfileRequest() {
-		return new UserProfileRequest(NAME, SURNAME, UPDATED_STREET,
-				UPDATED_HOUSE_NUMBER, UPDATED_CITY, UPDATED_ZIPCODE, COUNTRY);
-	}
-
-	private AuthenticatedUser returnAuthenticatedUser() {
-		return new AuthenticatedUser(
-				USER_ID, EMAIL, USER_ROLE
-		);
-
-	}
-
-	private UserEntity returnUserEntity() {
-		String HASHED_PASSWORD = "hashedPassword";
-
-		UserEntity user = new UserEntity(
-				EMAIL, HASHED_PASSWORD, USER_ROLE
-		);
-
-		user.setId(USER_ID);
-
-		return user;
-	}
-
-	private void profileSetter(UserProfileEntity profile, UserProfileRequest userProfileRequest) {
-
-		profile.setName(userProfileRequest.getName());
-		profile.setSurname(userProfileRequest.getSurname());
-		profile.setStreet(userProfileRequest.getStreet());
-		profile.setHouseNumber(userProfileRequest.getHouseNumber());
-		profile.setCity(userProfileRequest.getCity());
-		profile.setZipCode(userProfileRequest.getZipCode());
-		profile.setCountry(userProfileRequest.getCountry());
-
-
-	}
-
+	//Tests
 
 	@Test
 	public void testCreateUserProfile_whenRequestIsValid_returnUserProfileResponse() {
@@ -206,6 +166,50 @@ public class UserProfileServiceTest {
 		verify(userService, times(1)).getUserById(loggedInUser.getUserId());
 		verify(userProfileRepository, times(1)).existsByUserId(loggedInUser.getUserId());
 		verify(userProfileRepository, never()).saveAndFlush(any(UserProfileEntity.class));
+
+	}
+
+	//Helper
+
+	private UserProfileRequest newUserProfileRequest() {
+		return new UserProfileRequest(NAME, SURNAME, STREET,
+				HOUSE_NUMBER, CITY, ZIPCODE, COUNTRY);
+	}
+
+	private UserProfileRequest updateduserProfileRequest() {
+		return new UserProfileRequest(NAME, SURNAME, UPDATED_STREET,
+				UPDATED_HOUSE_NUMBER, UPDATED_CITY, UPDATED_ZIPCODE, COUNTRY);
+	}
+
+	private AuthenticatedUser returnAuthenticatedUser() {
+		return new AuthenticatedUser(
+				USER_ID, EMAIL, USER_ROLE
+		);
+
+	}
+
+	private UserEntity returnUserEntity() {
+		String HASHED_PASSWORD = "hashedPassword";
+
+		UserEntity user = new UserEntity(
+				EMAIL, HASHED_PASSWORD, USER_ROLE
+		);
+
+		user.setId(USER_ID);
+
+		return user;
+	}
+
+	private void profileSetter(UserProfileEntity profile, UserProfileRequest userProfileRequest) {
+
+		profile.setName(userProfileRequest.getName());
+		profile.setSurname(userProfileRequest.getSurname());
+		profile.setStreet(userProfileRequest.getStreet());
+		profile.setHouseNumber(userProfileRequest.getHouseNumber());
+		profile.setCity(userProfileRequest.getCity());
+		profile.setZipCode(userProfileRequest.getZipCode());
+		profile.setCountry(userProfileRequest.getCountry());
+
 
 	}
 

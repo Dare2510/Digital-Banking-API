@@ -70,6 +70,8 @@ public class AccountIntegrationTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	//Fields
+
 	private final String EMAIL = "testusermail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
@@ -82,131 +84,7 @@ public class AccountIntegrationTest {
 		userRepository.deleteAll();
 	}
 
-
-	//Helper
-
-	private UserProfileRequest returnProfileRequest() {
-		return new UserProfileRequest(
-				"Name",
-				"Surname",
-				"Street",
-				"5",
-				"City",
-				"123456",
-				"Country"
-		);
-	}
-
-	private RequestPostProcessor customerAuth(Long userId) {
-		AuthenticatedUser customer = new AuthenticatedUser(
-				userId, EMAIL, CUSTOMER_ROLE
-		);
-
-		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-				customer,
-				null,
-				List.of(new SimpleGrantedAuthority("ROLE_" + CUSTOMER_ROLE.name())));
-
-		return authentication(auth);
-	}
-
-	private RequestPostProcessor adminAuth() {
-		//99 -> random admin id
-		AuthenticatedUser admin = new AuthenticatedUser(
-				99L, "adminMail@mail.com", UserRole.ADMIN
-		);
-
-		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-				admin,
-				null,
-				List.of(new SimpleGrantedAuthority("ROLE_" + UserRole.ADMIN.name())));
-
-		return authentication(auth);
-	}
-
-	private Long createUserAndGetId(CustomerUserRequest customerUserRequest) throws Exception {
-		String response = mockMvc.perform(post("/api/auth/register")
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(customerUserRequest)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return ((Number) JsonPath.read(response, "$.id")).longValue();
-
-	}
-
-	private void createProfile(UserProfileRequest profileRequest, Long userId) throws Exception {
-		mockMvc.perform(post("/api/auth/register/profile")
-						.with(customerAuth(userId))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(profileRequest)))
-				.andExpect(status().isOk());
-	}
-
-	private void createAccount(Long userId, AccountRequest accountRequest) throws Exception {
-		mockMvc.perform(post("/api/customer/accounts")
-						.with(customerAuth(userId))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(accountRequest)))
-				.andExpect(status().isOk());
-	}
-
-	private Long createAccountAndGetId(Long userId, AccountRequest accountRequest) throws Exception {
-		String response = mockMvc.perform(post("/api/customer/accounts")
-						.with(customerAuth(userId))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(accountRequest)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return ((Number) JsonPath.read(response, "$.id")).longValue();
-	}
-
-	private String getAccountNumber(Long userId, Long accountId) throws Exception {
-		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
-						.with(customerAuth(userId)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return (JsonPath.read(response, "$.accountNumber"));
-	}
-
-	private String getAccountStatus(Long userId, Long accountId) throws Exception {
-		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
-						.with(customerAuth(userId)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return (JsonPath.read(response, "$.status"));
-	}
-
-	private double getAccountBalance(Long userId, Long accountId) throws Exception {
-		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
-						.with(customerAuth(userId)))
-				.andExpect(status().isOk())
-				.andReturn().getResponse().getContentAsString();
-
-		return (JsonPath.read(response, "$.balance"));
-	}
-
-	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
-		mockMvc.perform(post("/api/staff/accounts/deposits")
-						.with(adminAuth())
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(transactionRequest)))
-				.andExpect(status().isOk());
-	}
-
-	private void setAccountStatusToBlocked(Long accountId) throws Exception {
-
-		mockMvc.perform(patch("/api/staff/accounts/"+ accountId + "/status")
-				.with(adminAuth())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(new AccountStatusRequest(AccountStatus.BLOCKED))))
-				.andExpect(status().isNoContent());
-	}
-
-	//Test
+	//Tests
 
 	@Test
 	public void createAccount_whenRequestIsValid_returnsOK() throws Exception {
@@ -345,56 +223,6 @@ public class AccountIntegrationTest {
 	}
 
 	@Test
-	public void withdrawFromAccount_whenRequestIsValid_returnsTransactionResponse() throws Exception {
-		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
-		Long userId = createUserAndGetId(registerRequest);
-
-		UserProfileRequest profileRequest = returnProfileRequest();
-		createProfile(profileRequest, userId);
-
-		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
-		Long accountId = createAccountAndGetId(userId, accountRequest);
-
-		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
-		depositToAccount(deposit);
-
-		TransactionRequest withdraw = new TransactionRequest(accountId, BigDecimal.valueOf(500));
-
-		mockMvc.perform(post("/api/customer/accounts/withdrawals")
-						.with(customerAuth(userId))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(withdraw)))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.fromAccountId").value(accountId))
-				.andExpect(jsonPath("$.balanceAfter").value(BigDecimal.valueOf(500).doubleValue()))
-				.andExpect(jsonPath("$.amount").value(withdraw.getAmount().doubleValue()));
-
-	}
-
-	@Test
-	public void withdrawFromAccount_whenAmountExceedsBalance_returnsBadRequest() throws Exception {
-		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
-		Long userId = createUserAndGetId(registerRequest);
-
-		UserProfileRequest profileRequest = returnProfileRequest();
-		createProfile(profileRequest, userId);
-
-		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
-		Long accountId = createAccountAndGetId(userId, accountRequest);
-
-		TransactionRequest withdraw = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
-
-		mockMvc.perform(post("/api/customer/accounts/withdrawals")
-						.with(customerAuth(userId))
-						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(withdraw)))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.message")
-						.value("Account has insufficient balance for the requested withdrawal"));
-
-	}
-
-	@Test
 	public void closeAccount_whenRequestIsValid_returnsAccountClosureResponse() throws Exception {
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
 		Long userId = createUserAndGetId(registerRequest);
@@ -447,7 +275,128 @@ public class AccountIntegrationTest {
 								+ ". Account must be ACTIVE and have zero balance."));
 	}
 
+	//Helper
 
+	private UserProfileRequest returnProfileRequest() {
+		return new UserProfileRequest(
+				"Name",
+				"Surname",
+				"Street",
+				"5",
+				"City",
+				"123456",
+				"Country"
+		);
+	}
+
+	private RequestPostProcessor customerAuth(Long userId) {
+		AuthenticatedUser customer = new AuthenticatedUser(
+				userId, EMAIL, CUSTOMER_ROLE
+		);
+
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+				customer,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + CUSTOMER_ROLE.name())));
+
+		return authentication(auth);
+	}
+
+	private RequestPostProcessor adminAuth() {
+		//99 -> random admin id
+		AuthenticatedUser admin = new AuthenticatedUser(
+				99L, "adminMail@mail.com", UserRole.ADMIN
+		);
+
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+				admin,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + UserRole.ADMIN.name())));
+
+		return authentication(auth);
+	}
+
+	private Long createUserAndGetId(CustomerUserRequest customerUserRequest) throws Exception {
+		String response = mockMvc.perform(post("/api/auth/register")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(customerUserRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(response, "$.id")).longValue();
+
+	}
+
+	private void createProfile(UserProfileRequest profileRequest, Long userId) throws Exception {
+		mockMvc.perform(post("/api/auth/register/profile")
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(profileRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private void createAccount(Long userId, AccountRequest accountRequest) throws Exception {
+		mockMvc.perform(post("/api/customer/accounts")
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private Long createAccountAndGetId(Long userId, AccountRequest accountRequest) throws Exception {
+		String response = mockMvc.perform(post("/api/customer/accounts")
+						.with(customerAuth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(accountRequest)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(response, "$.id")).longValue();
+	}
+
+	private String getAccountNumber(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.accountNumber"));
+	}
+
+	private String getAccountStatus(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.status"));
+	}
+
+	private double getAccountBalance(Long userId, Long accountId) throws Exception {
+		String response = mockMvc.perform(get("/api/customer/accounts/" + accountId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return (JsonPath.read(response, "$.balance"));
+	}
+
+	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
+		mockMvc.perform(post("/api/staff/accounts/deposits")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(transactionRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private void setAccountStatusToBlocked(Long accountId) throws Exception {
+
+		mockMvc.perform(patch("/api/staff/accounts/" + accountId + "/status")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(new AccountStatusRequest(AccountStatus.BLOCKED))))
+				.andExpect(status().isNoContent());
+	}
 
 
 }

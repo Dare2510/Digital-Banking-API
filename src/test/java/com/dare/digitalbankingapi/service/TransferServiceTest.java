@@ -56,6 +56,8 @@ public class TransferServiceTest {
 	@Spy
 	private SortValidator sortValidator;
 
+	//Fields
+
 	private final Long TRANSFER_ID = 1L;
 
 	@BeforeEach
@@ -64,66 +66,7 @@ public class TransferServiceTest {
 
 	}
 
-	//Helper
-	private UserEntity returnFromUserEntity() {
-		UserEntity customer = new UserEntity(
-				"testEmail@mail.com",
-				"passwordHash",
-				UserRole.CUSTOMER
-		);
-
-		customer.setId(1L);
-		return customer;
-
-	}
-
-	private UserEntity returnToUserEntity() {
-		UserEntity customer = new UserEntity(
-				"testEmail@mail.com",
-				"passwordHash",
-				UserRole.CUSTOMER
-		);
-
-		customer.setId(2L);
-		return customer;
-
-	}
-
-	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
-		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
-	}
-
-	private AccountEntity setAccountValues(Long accountId, String accountNumber,
-										   UserEntity userEntity) {
-
-		AccountEntity accountEntity = new AccountEntity();
-
-		accountEntity.setId(accountId);
-		accountEntity.setOwner(userEntity);
-		accountEntity.setAccountNumber(accountNumber);
-		accountEntity.setCurrency(Currency.EUR);
-		accountEntity.setStatus(AccountStatus.ACTIVE);
-		accountEntity.setCreatedAt(LocalDateTime.now());
-
-		return accountEntity;
-
-
-	}
-
-	private TransactionEntity returnTransaction(AccountEntity account,
-												String reference, BigDecimal amount, TransferEntity transfer) {
-
-		return new TransactionEntity(
-				account,
-				amount,
-				reference,
-				TransactionType.TRANSFER_OUT,
-				account.getBalance().subtract(amount),
-				transfer
-		);
-
-	}
-
+	//Tests
 
 	@Test
 	public void createTransferBetweenAccounts_whenRequestIsValid_returnsTransferResponse() {
@@ -498,6 +441,66 @@ public class TransferServiceTest {
 		verify(transferRepository, times(1)).findByFromAccountIdOrToAccountIdOrderByCreatedAtDesc(accountId, accountId);
 		verify(transactionService, never()).getTransactionByTransferId(anyLong());
 
+	}
+
+	//Helper
+
+	private UserEntity returnFromUserEntity() {
+		UserEntity customer = new UserEntity(
+				"testEmail@mail.com",
+				"passwordHash",
+				UserRole.CUSTOMER
+		);
+
+		customer.setId(1L);
+		return customer;
+
+	}
+
+	private UserEntity returnToUserEntity() {
+		UserEntity customer = new UserEntity(
+				"testEmail@mail.com",
+				"passwordHash",
+				UserRole.CUSTOMER
+		);
+
+		customer.setId(2L);
+		return customer;
+
+	}
+
+	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
+		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
+	}
+
+	private AccountEntity setAccountValues(Long accountId, String accountNumber,
+										   UserEntity userEntity) {
+
+		AccountEntity accountEntity = new AccountEntity();
+
+		accountEntity.setId(accountId);
+		accountEntity.setOwner(userEntity);
+		accountEntity.setAccountNumber(accountNumber);
+		accountEntity.setCurrency(Currency.EUR);
+		accountEntity.setStatus(AccountStatus.ACTIVE);
+		accountEntity.setCreatedAt(LocalDateTime.now());
+
+		return accountEntity;
+
+
+	}
+
+	private TransactionEntity returnTransaction(AccountEntity account,
+												String reference, BigDecimal amount, TransferEntity transfer) {
+
+		return new TransactionEntity(
+				account,
+				amount,
+				reference,
+				TransactionType.TRANSFER_OUT,
+				account.getBalance().subtract(amount),
+				transfer
+		);
 
 	}
 

@@ -45,43 +45,6 @@ public class TransactionServiceTest {
 	@Spy
 	private SortValidator sortValidator;
 
-	//Helper
-
-	private AccountEntity setAccountValues() {
-
-		AccountEntity accountEntity = new AccountEntity();
-
-		accountEntity.setId(1L);
-		accountEntity.setOwner(returnUserEntity());
-		accountEntity.setAccountNumber("accountNumber");
-		accountEntity.setCurrency(Currency.EUR);
-		accountEntity.setStatus(AccountStatus.ACTIVE);
-		accountEntity.setCreatedAt(LocalDateTime.now());
-
-		return accountEntity;
-
-
-	}
-
-	private UserEntity returnUserEntity() {
-		UserEntity customer = new UserEntity(
-				"testEmail@mail.com",
-				"passwordHash",
-				UserRole.CUSTOMER
-		);
-
-		customer.setId(1L);
-		return customer;
-
-	}
-
-	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
-		return new AuthenticatedUser(
-				user.getId(),
-				user.getEmail(),
-				user.getUserRole()
-		);
-	}
 
 	@BeforeEach
 	void setUp() {
@@ -206,6 +169,43 @@ public class TransactionServiceTest {
 		verify(accountService, never()).updateBalance(any(), any(), any());
 		verify(transactionRepository, never()).saveAndFlush(any(TransactionEntity.class));
 
+	}
 
+	//Helper
+
+	private AccountEntity setAccountValues() {
+
+		AccountEntity accountEntity = new AccountEntity();
+
+		accountEntity.setId(1L);
+		accountEntity.setOwner(returnUserEntity());
+		accountEntity.setAccountNumber("accountNumber");
+		accountEntity.setCurrency(Currency.EUR);
+		accountEntity.setStatus(AccountStatus.ACTIVE);
+		accountEntity.setCreatedAt(LocalDateTime.now());
+
+		return accountEntity;
+
+
+	}
+
+	private UserEntity returnUserEntity() {
+		UserEntity customer = new UserEntity(
+				"testEmail@mail.com",
+				"passwordHash",
+				UserRole.CUSTOMER
+		);
+
+		customer.setId(1L);
+		return customer;
+
+	}
+
+	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
+		return new AuthenticatedUser(
+				user.getId(),
+				user.getEmail(),
+				user.getUserRole()
+		);
 	}
 }

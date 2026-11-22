@@ -45,6 +45,8 @@ public class UserServiceTest {
 	@Spy
 	private ModelMapper modelMapper;
 
+	//Fields
+
 	private final String PASSWORD = "password";
 	private final String EMAIL = "testEmail@mail.com";
 
@@ -59,15 +61,7 @@ public class UserServiceTest {
 				passwordEncoder, modelMapper, sortValidator);
 	}
 
-	//Helpers
-	private CustomerUserRequest validCustomerRequest() {
-		return new CustomerUserRequest(EMAIL, PASSWORD);
-	}
-
-	private EmployeeUserRequest validEmployeeRequest() {
-		return new EmployeeUserRequest(EMAIL, PASSWORD, STAFF_USER_ROLE);
-	}
-
+	//Tests
 
 	@Test
 	public void createCustomerUser_whenRequestIsValid_returnsUserResponse() {
@@ -142,6 +136,16 @@ public class UserServiceTest {
 		verify(userRepository, times(1)).saveAndFlush(any(UserEntity.class));
 		verify(userRepository, times(1)).existsByEmail(normalizedMail);
 		verify(passwordEncoder, times(1)).encode(validRequest.getPassword());
+	}
+
+	//Helper
+
+	private CustomerUserRequest validCustomerRequest() {
+		return new CustomerUserRequest(EMAIL, PASSWORD);
+	}
+
+	private EmployeeUserRequest validEmployeeRequest() {
+		return new EmployeeUserRequest(EMAIL, PASSWORD, STAFF_USER_ROLE);
 	}
 
 

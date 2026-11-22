@@ -59,52 +59,13 @@ public class AccountServiceTest {
 	private final Long ACCOUNT_ID = 1L;
 	private final String ACCOUNT_NUMBER = "123456789";
 
-	//Helper
-	private UserProfileEntity returnUserProfileEntity() {
-		return new UserProfileEntity(
-				returnUserEntity(),
-				"testName", "testSurName", "testStreet",
-				"99", "testCity", "testZipCode", "testCountry"
-		);
-	}
-
-	private UserEntity returnUserEntity() {
-		UserEntity customer = new UserEntity(
-				"testEmail@mail.com",
-				"passwordHash",
-				UserRole.CUSTOMER
-		);
-
-		customer.setId(1L);
-		return customer;
-
-	}
-
-	private AccountRequest returnAccountRequest() {
-		return new AccountRequest(
-				Currency.EUR
-		);
-	}
-
-	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
-		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
-	}
-
-	private void setAccountValues(AccountEntity accountEntity, UserEntity userEntity, AccountRequest accountRequest) {
-		accountEntity.setId(ACCOUNT_ID);
-		accountEntity.setOwner(userEntity);
-		accountEntity.setAccountNumber(ACCOUNT_NUMBER);
-		accountEntity.setCurrency(accountRequest.getCurrency());
-		accountEntity.setStatus(AccountStatus.ACTIVE);
-		accountEntity.setCreatedAt(LocalDateTime.now());
-
-
-	}
 
 	@BeforeEach
 	public void setup() {
 		accountService = new AccountService(accountRepository, userProfileService, userService, sortValidator);
 	}
+
+	//Tests
 
 	@Test
 	public void createAccountTest_whenUserAndProfileExists_returnFullAccountResponse() {
@@ -286,6 +247,49 @@ public class AccountServiceTest {
 		verify(accountRepository, never()).saveAndFlush(accountToClose);
 
 		assertEquals(AccountStatus.ACTIVE, accountToClose.getStatus());
+
+	}
+
+	//Helper
+
+	private UserProfileEntity returnUserProfileEntity() {
+		return new UserProfileEntity(
+				returnUserEntity(),
+				"testName", "testSurName", "testStreet",
+				"99", "testCity", "testZipCode", "testCountry"
+		);
+	}
+
+	private UserEntity returnUserEntity() {
+		UserEntity customer = new UserEntity(
+				"testEmail@mail.com",
+				"passwordHash",
+				UserRole.CUSTOMER
+		);
+
+		customer.setId(1L);
+		return customer;
+
+	}
+
+	private AccountRequest returnAccountRequest() {
+		return new AccountRequest(
+				Currency.EUR
+		);
+	}
+
+	private AuthenticatedUser returnAuthenticatedUser(UserEntity user) {
+		return new AuthenticatedUser(user.getId(), user.getEmail(), user.getUserRole());
+	}
+
+	private void setAccountValues(AccountEntity accountEntity, UserEntity userEntity, AccountRequest accountRequest) {
+		accountEntity.setId(ACCOUNT_ID);
+		accountEntity.setOwner(userEntity);
+		accountEntity.setAccountNumber(ACCOUNT_NUMBER);
+		accountEntity.setCurrency(accountRequest.getCurrency());
+		accountEntity.setStatus(AccountStatus.ACTIVE);
+		accountEntity.setCreatedAt(LocalDateTime.now());
+
 
 	}
 }

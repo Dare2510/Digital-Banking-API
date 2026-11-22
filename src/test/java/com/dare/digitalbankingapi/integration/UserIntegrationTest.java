@@ -57,6 +57,8 @@ public class UserIntegrationTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	//Fields
+
 	private final String EMAIL = "testusermail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
@@ -67,6 +69,8 @@ public class UserIntegrationTest {
 		userRepository.deleteAll();
 
 	}
+
+	//Tests
 
 	@Test
 	public void registerCustomerUser_withValidRequest_returnsUserResponse() throws Exception {
@@ -229,7 +233,7 @@ public class UserIntegrationTest {
 
 	}
 
-	private void createProfile(UserProfileRequest profileRequest,Long userId) throws Exception {
+	private void createProfile(UserProfileRequest profileRequest, Long userId) throws Exception {
 		mockMvc.perform(post("/api/auth/register/profile")
 						.with(auth(userId))
 						.contentType(MediaType.APPLICATION_JSON)

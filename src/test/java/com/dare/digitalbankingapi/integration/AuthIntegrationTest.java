@@ -51,6 +51,8 @@ public class AuthIntegrationTest {
 	@Autowired
 	private JwtUtil jwtUtil;
 
+	//Fields
+
 	private final String EMAIL = "testusermail@mail.com";
 	private final String PASSWORD = "password";
 	private final UserRole CUSTOMER_ROLE = UserRole.CUSTOMER;
@@ -61,6 +63,8 @@ public class AuthIntegrationTest {
 				.findByEmail(EMAIL)
 				.ifPresent(user -> userRepository.delete(user));
 	}
+
+	//Tests
 
 	@Test
 	public void loginTest_requestIsValid_returnJWT() throws Exception {
@@ -111,6 +115,7 @@ public class AuthIntegrationTest {
 	}
 
 	//Helper
+
 	private CustomerUserRequest newCustomerUserRequest() {
 		return new CustomerUserRequest(
 				EMAIL,
