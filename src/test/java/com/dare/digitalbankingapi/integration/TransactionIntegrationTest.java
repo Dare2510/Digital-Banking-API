@@ -5,6 +5,7 @@ import com.dare.digitalbankingapi.account.entity.Currency;
 import com.dare.digitalbankingapi.account.repository.AccountRepository;
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.transaction.dto.TransactionRequest;
+import com.dare.digitalbankingapi.transaction.entity.TransactionType;
 import com.dare.digitalbankingapi.transaction.repository.TransactionRepository;
 import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
@@ -34,6 +35,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -83,6 +85,8 @@ public class TransactionIntegrationTest {
 
 	//Tests
 
+	//Customers
+
 	@Test
 	public void withdrawFromAccount_whenRequestIsValid_returnsTransactionResponse() throws Exception {
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
@@ -131,6 +135,135 @@ public class TransactionIntegrationTest {
 				.andExpect(jsonPath("$.message")
 						.value("Account has insufficient balance for the requested withdrawal"));
 
+	}
+
+	@Test
+	public void getAllTransactionsForUser_whenTransactionsAreFound_returnsListOfTransactionResponses() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+		TransactionRequest withdraw = new TransactionRequest(accountId, BigDecimal.valueOf(500));
+		depositToAccount(deposit);
+		withdrawFromAccount(userId,accountId,withdraw);
+
+		mockMvc.perform(get("/api/customer/transactions")
+				.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.size()").value(2))
+				.andExpect(jsonPath("$[0].fromAccountId").value(accountId))
+				.andExpect(jsonPath("$[1].fromAccountId").value(accountId))
+				.andExpect(jsonPath("$[0].amount").value(deposit.getAmount().doubleValue()))
+				.andExpect(jsonPath("$[1].amount").value(withdraw.getAmount().doubleValue()))
+				.andExpect(jsonPath("$[0].transactionType").value(TransactionType.DEPOSIT.name()))
+				.andExpect(jsonPath("$[1].transactionType").value(TransactionType.WITHDRAW.name()));
+	}
+
+	@Test
+	public void getAllTransactionsForUser_whenNoTransactionsAreFound_returnsEmptyList() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		mockMvc.perform(get("/api/customer/transactions")
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.size()").value(0))
+				.andExpect(jsonPath("$[0]").doesNotExist());
+
+	}
+
+	@Test
+	public void getTransactionsById_whenTransactionIsFound_returnsIsOK() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+		Long transactionId = depositToAccountAndGetId(deposit);
+
+		mockMvc.perform(get("/api/customer/transactions/" + transactionId)
+						.with(customerAuth(userId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.fromAccountId").value(accountId))
+				.andExpect(jsonPath("$.amount").value(deposit.getAmount().doubleValue()))
+				.andExpect(jsonPath("$.balanceAfter").value(BigDecimal.valueOf(1000).doubleValue()));
+	}
+
+	@Test
+	public void getTransactionsById_whenUserIsNotOwnerOfTransaction_returnsIsNotFound() throws Exception {
+		CustomerUserRequest loggedInUser = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long loggedInUserId = createUserAndGetId(loggedInUser);
+
+		CustomerUserRequest owner = new CustomerUserRequest("different@mail.com", PASSWORD);
+		Long ownerId = createUserAndGetId(owner);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, ownerId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(ownerId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+		Long transactionId = depositToAccountAndGetId(deposit);
+
+		mockMvc.perform(get("/api/customer/transactions/" + transactionId)
+						.with(customerAuth(loggedInUserId)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message")
+						.value("Transaction for transfer Id " + transactionId + " not found"));
+	}
+
+	//Staff
+
+	@Test
+	public void depositToAccount_whenRequestIsValid_returnsIsOK() throws Exception {
+		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
+		Long userId = createUserAndGetId(registerRequest);
+
+		UserProfileRequest profileRequest = returnProfileRequest();
+		createProfile(profileRequest, userId);
+
+		AccountRequest accountRequest = new AccountRequest(Currency.EUR);
+		Long accountId = createAccountAndGetId(userId, accountRequest);
+
+		TransactionRequest deposit = new TransactionRequest(accountId, BigDecimal.valueOf(1000));
+
+		//first deposit to check correct balance calculation
+		depositToAccount(deposit);
+
+		mockMvc.perform(post("/api/staff/accounts/deposits")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(deposit)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.fromAccountId").value(accountId))
+				.andExpect(jsonPath("$.amount").value(deposit.getAmount().doubleValue()))
+				.andExpect(jsonPath("$.balanceAfter").value(BigDecimal.valueOf(2000).doubleValue()));
+
+	}
+
+	@Test
+	public void getPageOfTransactions_withPageableDefault_returnsIsOK() throws Exception {
+		mockMvc.perform(get("/api/staff/transactions")
+				.with(adminAuth())
+						.param("page", "0")
+						.param("size", "20")
+						.param("sort", "createdAt")
+						.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(20));
 	}
 
 	//Helper
@@ -207,6 +340,26 @@ public class TransactionIntegrationTest {
 	private void depositToAccount(TransactionRequest transactionRequest) throws Exception {
 		mockMvc.perform(post("/api/staff/accounts/deposits")
 						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(transactionRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private Long depositToAccountAndGetId(TransactionRequest transactionRequest) throws Exception {
+		String response = mockMvc.perform(post("/api/staff/accounts/deposits")
+							.with(adminAuth())
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(transactionRequest)))
+					.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(response, "$.id")).longValue();
+
+	}
+
+	private void withdrawFromAccount(Long userId, Long accountId,TransactionRequest transactionRequest) throws Exception {
+		mockMvc.perform(post("/api/customer/accounts/withdrawals")
+						.with(customerAuth(userId))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(transactionRequest)))
 				.andExpect(status().isOk());

@@ -134,6 +134,7 @@ public class TransactionService {
 
 	private TransactionResponse buildResponse(TransactionEntity transaction) {
 		return TransactionResponse.builder()
+				.id(transaction.getId())
 				.fromAccountId(transaction.getAccount().getId())
 				.amount(transaction.getAmount())
 				.balanceAfter(transaction.getBalanceAfter())
