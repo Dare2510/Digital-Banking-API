@@ -2,6 +2,7 @@ package com.dare.digitalbankingapi.integration;
 
 import com.dare.digitalbankingapi.security.principal.AuthenticatedUser;
 import com.dare.digitalbankingapi.user.dto.CustomerUserRequest;
+import com.dare.digitalbankingapi.user.dto.EmployeeUserRequest;
 import com.dare.digitalbankingapi.user.dto.UserProfileRequest;
 import com.dare.digitalbankingapi.user.entity.UserRole;
 import com.dare.digitalbankingapi.user.repository.UserProfileRepository;
@@ -29,8 +30,7 @@ import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -183,6 +183,98 @@ public class UserIntegrationTest {
 						.value("Profile update failed for user id: " + userId + "no profile exists"));
 	}
 
+	//Staff
+
+	@Test
+	public void getPageOfUsersWithDetails_withPageableDefaults_returnsIsOK() throws Exception {
+		mockMvc.perform(get("/api/staff/users")
+						.with(adminAuth())
+						.param("page", "0")
+						.param("size", "20")
+						.param("sort", "id")
+						.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(20));
+	}
+
+	//Admin
+	@Test
+	public void createEmployeeUser_withValidRequest_returnsIsOK() throws Exception {
+		EmployeeUserRequest validRequest = new EmployeeUserRequest(EMAIL, PASSWORD, UserRole.STAFF);
+
+		mockMvc.perform(post("/api/admin/employee")
+				.with(adminAuth())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(validRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").exists())
+				.andExpect(jsonPath("$.email").value(validRequest.getEmail()))
+				.andExpect(jsonPath("$.userRole").value(validRequest.getUserRole().name()));
+	}
+
+	@Test
+	public void createEmployeeProfile_withValidRequest_returnsIsOK() throws Exception {
+		EmployeeUserRequest validRequest = new EmployeeUserRequest(EMAIL, PASSWORD, UserRole.STAFF);
+		Long employeeUserId = createEmployeeUserAndGetId(validRequest);
+
+		UserProfileRequest profileRequest = returnRequest();
+
+		mockMvc.perform(post("/api/admin/employee/" + employeeUserId + "/profile")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(profileRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value(profileRequest.getName()))
+				.andExpect(jsonPath("$.surname").value(profileRequest.getSurname()))
+				.andExpect(jsonPath("$.street").value(profileRequest.getStreet()))
+				.andExpect(jsonPath("$.houseNumber").value(profileRequest.getHouseNumber()))
+				.andExpect(jsonPath("$.city").value(profileRequest.getCity()))
+				.andExpect(jsonPath("$.zipCode").value(profileRequest.getZipCode()))
+				.andExpect(jsonPath("$.country").value(profileRequest.getCountry()));
+	}
+
+	@Test
+	public void updateEmployeeProfile_withValidRequest_returnsIsOK() throws Exception {
+		EmployeeUserRequest validRequest = new EmployeeUserRequest(EMAIL, PASSWORD, UserRole.STAFF);
+		Long employeeUserId = createEmployeeUserAndGetId(validRequest);
+
+		UserProfileRequest profileRequest = returnRequest();
+		createEmployeeProfile(profileRequest, employeeUserId);
+
+		UserProfileRequest updatedProfileRequest = returnUpdateRequest();
+
+		mockMvc.perform(patch("/api/admin/employee/" + employeeUserId + "/profile/update")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updatedProfileRequest)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value(updatedProfileRequest.getName()))
+				.andExpect(jsonPath("$.surname").value(updatedProfileRequest.getSurname()))
+				.andExpect(jsonPath("$.street").value(updatedProfileRequest.getStreet()))
+				.andExpect(jsonPath("$.houseNumber").value(updatedProfileRequest.getHouseNumber()))
+				.andExpect(jsonPath("$.city").value(updatedProfileRequest.getCity()))
+				.andExpect(jsonPath("$.zipCode").value(updatedProfileRequest.getZipCode()))
+				.andExpect(jsonPath("$.country").value(updatedProfileRequest.getCountry()));
+	}
+
+	@Test
+	public void updateUserRole_withValidRequest_returnsIsOK() throws Exception {
+		EmployeeUserRequest validRequest = new EmployeeUserRequest(EMAIL, PASSWORD, UserRole.STAFF);
+		Long employeeUserId = createEmployeeUserAndGetId(validRequest);
+
+		mockMvc.perform(patch("/api/admin/users/" + employeeUserId + "/userRole")
+				.with(adminAuth())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(UserRole.ADMIN.name())))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").exists())
+				.andExpect(jsonPath("$.userRole").value(UserRole.ADMIN.name()));
+
+	}
+
+
+
 	//Helper
 
 	private UserProfileRequest returnRequest() {
@@ -222,6 +314,19 @@ public class UserIntegrationTest {
 		return authentication(auth);
 	}
 
+	private RequestPostProcessor adminAuth() {
+		AuthenticatedUser customer = new AuthenticatedUser(
+				99L, EMAIL, UserRole.ADMIN
+		);
+
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+				customer,
+				null,
+				List.of(new SimpleGrantedAuthority("ROLE_" + UserRole.ADMIN.name())));
+
+		return authentication(auth);
+	}
+
 	private Long createUserAndGetId(CustomerUserRequest customerUserRequest) throws Exception {
 		String response = mockMvc.perform(post("/api/auth/register")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -236,6 +341,24 @@ public class UserIntegrationTest {
 	private void createProfile(UserProfileRequest profileRequest, Long userId) throws Exception {
 		mockMvc.perform(post("/api/auth/register/profile")
 						.with(auth(userId))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(profileRequest)))
+				.andExpect(status().isOk());
+	}
+
+	private Long createEmployeeUserAndGetId(EmployeeUserRequest employeeUserRequest) throws Exception {
+		String response = mockMvc.perform(post("/api/admin/employee")
+						.with(adminAuth())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(employeeUserRequest)))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+		return ((Number) JsonPath.read(response, "$.id")).longValue();
+	}
+
+	private void createEmployeeProfile(UserProfileRequest profileRequest, Long employeeUserId) throws Exception {
+		mockMvc.perform(post("/api/admin/employee/" + employeeUserId + "/profile")
+						.with(adminAuth())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(profileRequest)))
 				.andExpect(status().isOk());

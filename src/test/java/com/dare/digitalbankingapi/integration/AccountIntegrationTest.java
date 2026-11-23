@@ -86,6 +86,8 @@ public class AccountIntegrationTest {
 
 	//Tests
 
+	//Customers
+
 	@Test
 	public void createAccount_whenRequestIsValid_returnsOK() throws Exception {
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
@@ -275,6 +277,8 @@ public class AccountIntegrationTest {
 								+ ". Account must be ACTIVE and have zero balance."));
 	}
 
+	//Staff
+
 	@Test
 	public void updateAccountStatus_whenTransitionIsValid_returnsNoContent() throws Exception {
 		CustomerUserRequest registerRequest = new CustomerUserRequest(EMAIL, PASSWORD);
@@ -346,6 +350,19 @@ public class AccountIntegrationTest {
 
 
 
+	}
+
+	@Test
+	public void getPageOfAccounts_withPageableDefaults_returnIsOK() throws Exception {
+		mockMvc.perform(get("/api/staff/accounts")
+						.with(adminAuth())
+				.param("page", "0")
+				.param("size", "20")
+				.param("sort", "id")
+				.param("direction", "ASC"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.size").value(20));
 	}
 
 	//Helper
